@@ -54,13 +54,24 @@ Open `http://localhost:5173`. Vite proxies `/api/*` to the worker automatically.
 | Component | URL |
 |-----------|-----|
 | **Frontend (GitHub Pages)** | https://karlogin.github.io/Enithusan-TV-Web/ |
-| **API (Cloudflare Worker)** | _Deploy below — required for movies & playback_ |
+| **API (Cloudflare Worker)** | https://einthusan-tv-api.einthusan-karthik.workers.dev/api |
 
 ### Step 1 — Deploy the Cloudflare Worker (required)
 
 The frontend needs a live API. Choose **one** method:
 
 #### Option A: Deploy from your machine (quickest)
+
+If https://dash.cloudflare.com/.../workers/onboarding shows an error, register your subdomain via API first:
+
+```bash
+chmod +x scripts/register-workers-subdomain.sh
+./scripts/register-workers-subdomain.sh einthusan-karthik   # pick a unique name
+```
+
+Or use the dashboard: **Cloudflare → Workers & Pages** (not the onboarding link) → set **Your subdomain**.
+
+Then deploy:
 
 ```bash
 cd worker
@@ -69,7 +80,9 @@ npx wrangler login          # opens browser — approve Cloudflare access
 npx wrangler deploy
 ```
 
-Copy the worker URL shown (e.g. `https://einthusan-tv-api.<your-subdomain>.workers.dev`).
+Copy the worker URL shown (e.g. `https://einthusan-tv-api.einthusan-karthik.workers.dev`).
+
+> SSL for a new `*.workers.dev` subdomain can take a few minutes to become reachable.
 
 #### Option B: Deploy via GitHub Actions
 
