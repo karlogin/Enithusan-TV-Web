@@ -94,7 +94,7 @@ The build injects the beacon into `index.html` when `VITE_CF_BEACON_TOKEN` is se
 | Variable | Value |
 |----------|-------|
 | `VITE_API_BASE` | `https://einthusan-tv-api.einthusan-karthik.workers.dev/api` ✓ |
-| `VITE_CF_BEACON_TOKEN` | *(set after step 4)* |
+| `VITE_CF_BEACON_TOKEN` | `7cfc13c21a214d209daca8a89eceb1ac` ✓ |
 
 ---
 
