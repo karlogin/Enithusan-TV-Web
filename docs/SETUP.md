@@ -90,6 +90,17 @@ The build injects the beacon into `index.html` when `VITE_CF_BEACON_TOKEN` is se
 | `VITE_API_BASE` | `https://einthusan-tv-api.einthusan-karthik.workers.dev/api` ✓ |
 | `VITE_CF_BEACON_TOKEN` | `7cfc13c21a214d209daca8a89eceb1ac` ✓ |
 
+## 6. GitHub Actions (worker CI deploy)
+
+Secrets configured for automatic worker deploy on push to `worker/`:
+
+| Secret | Purpose |
+|--------|---------|
+| `CLOUDFLARE_API_TOKEN` | Account API token (Workers Scripts + KV write) |
+| `CLOUDFLARE_ACCOUNT_ID` | `86d1fcd3848963e4e830d89aec3e1354` |
+
+Workflow: `.github/workflows/deploy-worker.yml` (uses `cloudflare/wrangler-action@v3`).
+
 ---
 
 ## Not included (optional infra)
