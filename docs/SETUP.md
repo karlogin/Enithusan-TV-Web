@@ -29,38 +29,32 @@ Verify: [https://einthusan.mainframe.website](https://einthusan.mainframe.websit
 
 ## 2. Worker secrets & vars
 
-Already set via `wrangler`:
-
 | Name | Purpose |
 |------|---------|
 | `AUTH_SECRET` | Reserved for future signed tokens |
-| `DEV_SHOW_RESET_LINK` | `true` until email works — shows reset link on forgot-password page |
 | `APP_URL` | `https://einthusan.mainframe.website` (in `wrangler.toml`) |
-| `MAIL_FROM` | `noreply@mainframe.website` (in `wrangler.toml`) |
-
-After email works, disable dev links:
-
-```bash
-cd worker && echo false | npx wrangler secret put DEV_SHOW_RESET_LINK
-```
+| `RESEND_API_KEY` | *(optional)* Send reset emails via [Resend](https://resend.com) free tier |
 
 ---
 
-## 3. Password reset email (Cloudflare Email Sending)
+## 3. Password reset (free — no paid email required)
 
-MailChannels free tier for Workers ended in 2024. This project uses **Cloudflare Email Service**.
+Cloudflare Email Sending is paid. By default, **forgot password shows a reset link on the page** (valid 1 hour). No email setup needed.
 
-### Steps (≈5 minutes)
+### Optional: email via Resend (free tier)
 
-1. Open [Email Sending](https://dash.cloudflare.com/86d1fcd3848963e4e830d89aec3e1354/email/routing) → **Email Sending**
-2. Click **Onboard Domain** → choose **`mainframe.website`**
-3. Click **Add records and onboard** (creates `cf-bounce.*` SPF/DKIM/DMARC)
-4. Wait until all records show **Locked** (usually 5–15 min)
-5. Redeploy worker: `cd worker && npx wrangler deploy`
+1. Sign up at [resend.com](https://resend.com) and create an API key
+2. Verify `mainframe.website` (or use `onboarding@resend.dev` for testing)
+3. Set worker secrets:
 
-Test: register an account → **Forgot password** → check inbox for email from `noreply@mainframe.website`.
+```bash
+cd worker
+echo "YOUR_RESEND_KEY" | npx wrangler secret put RESEND_API_KEY
+echo "Einthusan TV <noreply@mainframe.website>" | npx wrangler secret put MAIL_FROM
+npx wrangler deploy
+```
 
-Until onboarding completes, forgot-password still works via the **dev reset link** shown on the page.
+When `RESEND_API_KEY` is set, reset links are emailed instead of shown in the UI.
 
 ---
 

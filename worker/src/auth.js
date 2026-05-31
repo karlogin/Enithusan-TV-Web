@@ -41,6 +41,27 @@ function json(data, status = 200, headers = {}) {
   return Response.json(data, { status, headers });
 }
 
+/** @param {object} env @param {{ to: string, resetUrl: string }} opts */
+async function sendResetEmail(env, { to, resetUrl }) {
+  const from = env.MAIL_FROM || 'Einthusan TV <onboarding@resend.dev>';
+  const subject = 'Reset your Einthusan TV password';
+  const text = `Click to reset your password (valid 1 hour):\n\n${resetUrl}\n\nIf you did not request this, ignore this email.`;
+  const html = `<p>Click to reset your password (valid 1 hour):</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>If you did not request this, ignore this email.</p>`;
+
+  if (env.RESEND_API_KEY) {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ from, to: [to], subject, html, text }),
+    });
+    return res.ok;
+  }
+  return false;
+}
+
 function libraryKey(userId, profileId = 'default') {
   return `library:${userId}:${profileId}`;
 }
@@ -155,22 +176,19 @@ export async function handleAuth(request, env, corsHeaders) {
       await kv(env).put(`reset:${token}`, userId, { expirationTtl: 3600 });
       const appUrl = env.APP_URL || 'https://einthusan.mainframe.website';
       const resetUrl = `${appUrl}/reset-password?token=${token}`;
-      const mailFrom = env.MAIL_FROM || 'noreply@mainframe.website';
-      if (env.EMAIL) {
-        try {
-          await env.EMAIL.send({
-            to: email,
-            from: mailFrom,
-            subject: 'Reset your Einthusan TV password',
-            text: `Click to reset your password (valid 1 hour):\n\n${resetUrl}\n\nIf you did not request this, ignore this email.`,
-            html: `<p>Click to reset your password (valid 1 hour):</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>If you did not request this, ignore this email.</p>`,
-          });
-        } catch {
-          /* ignore — domain may not be onboarded yet */
-        }
-      } else if (env.DEV_SHOW_RESET_LINK === 'true') {
-        return json({ ok: true, resetUrl }, 200, corsHeaders);
+      const emailed = await sendResetEmail(env, { to: email, resetUrl }).catch(() => false);
+      if (emailed) {
+        return json({ ok: true, message: 'If that email exists, reset instructions were sent.' }, 200, corsHeaders);
       }
+      return json(
+        {
+          ok: true,
+          message: 'Use the reset link below (valid 1 hour).',
+          resetUrl,
+        },
+        200,
+        corsHeaders,
+      );
     }
     return json({ ok: true, message: 'If that email exists, reset instructions were sent.' }, 200, corsHeaders);
   }

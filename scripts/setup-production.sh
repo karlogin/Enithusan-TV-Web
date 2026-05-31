@@ -10,7 +10,6 @@ ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID:-86d1fcd3848963e4e830d89aec3e1354}"
 DOMAIN="mainframe.website"
 SITE_HOST="einthusan.mainframe.website"
 REPO="karlogin/Enithusan-TV-Web"
-MAIL_FROM="noreply@${DOMAIN}"
 
 red() { printf '\033[0;31m%s\033[0m\n' "$*"; }
 green() { printf '\033[0;32m%s\033[0m\n' "$*"; }
@@ -41,26 +40,10 @@ section "2. Worker secrets"
 cd "${ROOT}/worker"
 AUTH_SECRET="${AUTH_SECRET:-$(openssl rand -base64 32)}"
 echo "${AUTH_SECRET}" | npx wrangler secret put AUTH_SECRET
-green "✓ AUTH_SECRET set (save a copy if this is a new deploy)"
-echo "true" | npx wrangler secret put DEV_SHOW_RESET_LINK 2>/dev/null || true
-yellow "  DEV_SHOW_RESET_LINK=true — shows reset link in UI when email fails (disable after email works)"
-green "✓ APP_URL and MAIL_FROM are in wrangler.toml [vars]"
+green "✓ AUTH_SECRET set"
+green "✓ Password reset uses in-page links (free). Optional: RESEND_API_KEY secret for email."
 
-section "3. Cloudflare Email Sending (password reset)"
-yellow "Onboard ${DOMAIN} for outbound email (one-time, ~2 min):"
-echo "  https://dash.cloudflare.com/${ACCOUNT_ID}/email/routing"
-echo "  → Email Sending → Onboard Domain → ${DOMAIN} → Add records"
-echo "  Sender address: ${MAIL_FROM}"
-if cf_api "https://api.cloudflare.com/client/v4/zones?name=${DOMAIN}" >/dev/null 2>&1; then
-  ZONE_ID=$(cf_api "https://api.cloudflare.com/client/v4/zones?name=${DOMAIN}" | python3 -c "import sys,json; r=json.load(sys.stdin); print(r['result'][0]['id'] if r.get('result') else '')")
-  if [[ -n "${ZONE_ID}" ]]; then
-    green "✓ Zone ${DOMAIN} found (${ZONE_ID})"
-  fi
-else
-  yellow "  Set CLOUDFLARE_API_TOKEN to automate zone lookup"
-fi
-
-section "4. Cloudflare Web Analytics"
+section "3. Cloudflare Web Analytics"
 BEACON_TOKEN=""
 if [[ -n "${CLOUDFLARE_API_TOKEN:-}" ]]; then
   LIST=$(cf_api "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/rum/site_info/list" || echo "")
@@ -103,11 +86,11 @@ else
   echo "  gh variable set VITE_CF_BEACON_TOKEN --body YOUR_TOKEN -R ${REPO}"
 fi
 
-section "5. Deploy worker"
+section "4. Deploy worker"
 npx wrangler deploy
 green "✓ Worker deployed"
 
-section "6. Redeploy frontend"
+section "5. Redeploy frontend"
 cd "${ROOT}"
 if [[ -n "${BEACON_TOKEN:-}" ]]; then
   git commit --allow-empty -m "chore: trigger Pages redeploy after production setup" 2>/dev/null && git push origin main || yellow "Push manually to redeploy Pages"
@@ -119,6 +102,3 @@ section "Done"
 echo "Site:    https://${SITE_HOST}"
 echo "API:     https://einthusan-tv-api.einthusan-karthik.workers.dev"
 echo "Analytics: https://dash.cloudflare.com/${ACCOUNT_ID}/web-analytics"
-echo
-yellow "After email domain is onboarded, disable dev reset links:"
-echo "  cd worker && echo false | npx wrangler secret put DEV_SHOW_RESET_LINK"

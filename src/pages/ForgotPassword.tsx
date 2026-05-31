@@ -39,7 +39,7 @@ export default function ForgotPassword() {
           {message && <p className="auth-sub">{message}</p>}
           {resetUrl && (
             <p className="auth-sub">
-              Dev reset link: <Link to={resetUrl.replace(/^https?:\/\/[^/]+/, '')}>{resetUrl}</Link>
+              Reset link: <Link to={resetUrl.replace(/^https?:\/\/[^/]+/, '')}>{resetUrl}</Link>
             </p>
           )}
           <button type="submit" className="btn btn-primary auth-submit" disabled={loading}>
