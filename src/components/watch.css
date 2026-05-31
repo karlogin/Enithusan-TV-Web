@@ -22,7 +22,7 @@
   position: absolute;
   top: 1rem;
   left: 1rem;
-  z-index: 20;
+  z-index: 30;
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -133,6 +133,7 @@
   justify-content: center;
   background: rgba(0, 0, 0, 0.6);
   z-index: 10;
+  pointer-events: none;
 }
 
 .player-error {
@@ -147,4 +148,267 @@
   color: var(--text-secondary);
   text-align: center;
   padding: 2rem;
+}
+
+/* ── Netflix-style video player ────────────────────────────────────────────── */
+
+.vp-root {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  overflow: hidden;
+  cursor: none;
+}
+
+.vp-controls-visible {
+  cursor: default;
+}
+
+.vp-root video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #000;
+}
+
+/* Center play/pause flash */
+.vp-center-flash {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 72px;
+  height: 72px;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 15;
+  animation: vp-flash 0.55s ease-out forwards;
+}
+
+.vp-center-flash svg {
+  width: 38px;
+  height: 38px;
+  fill: #fff;
+}
+
+@keyframes vp-flash {
+  0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.9); }
+  60%  { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.15); }
+}
+
+/* Controls overlay */
+.vp-controls {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  z-index: 20;
+  /* Bottom gradient */
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.4) 30%,
+    transparent 60%
+  );
+}
+
+.vp-controls-visible .vp-controls {
+  opacity: 1;
+}
+
+/* Only interactive children capture pointer events */
+.vp-controls-visible .vp-progress,
+.vp-controls-visible .vp-bottom {
+  pointer-events: auto;
+}
+
+/* Progress bar */
+.vp-progress {
+  padding: 0 1rem 0.35rem;
+  cursor: pointer;
+}
+
+.vp-progress-track {
+  position: relative;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  overflow: visible;
+  transition: height 0.15s ease;
+}
+
+.vp-progress:hover .vp-progress-track {
+  height: 6px;
+}
+
+.vp-progress-buffered {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.vp-progress-played {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  background: #e50914;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.vp-progress-thumb {
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.vp-progress:hover .vp-progress-thumb {
+  opacity: 1;
+}
+
+/* Bottom row */
+.vp-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.75rem 0.75rem;
+  gap: 0.25rem;
+}
+
+.vp-left,
+.vp-right {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+/* Icon buttons */
+.vp-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s, transform 0.1s;
+  flex-shrink: 0;
+}
+
+.vp-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.08);
+}
+
+.vp-btn:active {
+  transform: scale(0.95);
+}
+
+.vp-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  pointer-events: none;
+}
+
+.vp-btn-skip svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Volume */
+.vp-volume {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.vp-volume-slider-wrap {
+  width: 0;
+  overflow: hidden;
+  transition: width 0.2s ease;
+}
+
+.vp-volume:hover .vp-volume-slider-wrap,
+.vp-volume:focus-within .vp-volume-slider-wrap {
+  width: 80px;
+}
+
+.vp-volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 72px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  vertical-align: middle;
+  margin: 0 4px;
+}
+
+.vp-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
+}
+
+.vp-volume-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Time display */
+.vp-time {
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  user-select: none;
+  padding: 0 0.4rem;
+}
+
+.vp-time-sep {
+  opacity: 0.6;
+}
+
+/* Fullscreen: browser makes the element fill the viewport automatically.
+   Remove aspect-ratio constraint on the video itself in fullscreen. */
+.vp-root:fullscreen video,
+.vp-root:-webkit-full-screen video {
+  object-fit: contain;
 }
