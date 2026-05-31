@@ -49,10 +49,58 @@
   max-width: 900px;
 }
 
-.watch-title {
-  font-size: 2rem;
+.watch-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.watch-title-row .watch-title {
+  margin: 0;
+}
+
+.imdb-badge {
+  color: #f5c518 !important;
   font-weight: 700;
-  margin: 0 0 0.75rem;
+}
+
+.watch-genre {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: -0.5rem 0 1rem;
+}
+
+.watch-details {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 1rem;
+  margin: 1.25rem 0;
+  font-size: 0.9rem;
+}
+
+.watch-details dt {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.watch-details dd {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.imdb-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  color: #f5c518;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.imdb-link:hover {
+  text-decoration: underline;
 }
 
 .watch-meta {

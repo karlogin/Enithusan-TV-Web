@@ -157,3 +157,150 @@
   padding: 4rem 2rem;
   color: var(--text-secondary);
 }
+
+.row-subtitle {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin: 0.15rem 0 0;
+  font-weight: 400;
+}
+
+.continue-row {
+  margin-bottom: 2rem;
+}
+
+.row-header {
+  margin-bottom: 0.5rem;
+}
+
+.row-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.row-scroll {
+  display: flex;
+  gap: 0.65rem;
+  overflow-x: auto;
+  padding: 0.75rem 0 1rem;
+  scrollbar-width: none;
+}
+
+.row-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.continue-card-wrap {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.continue-card {
+  display: block;
+  width: clamp(200px, 22vw, 280px);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg-card);
+}
+
+.continue-card img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.continue-progress {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.continue-progress span {
+  display: block;
+  height: 100%;
+  background: var(--netflix-red);
+}
+
+.continue-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent 55%, rgba(0, 0, 0, 0.85));
+  display: flex;
+  align-items: flex-end;
+  padding: 0.65rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.continue-card:hover .continue-overlay {
+  opacity: 1;
+}
+
+.continue-overlay p {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.continue-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 1.1rem;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 2;
+}
+
+.continue-card-wrap:hover .continue-remove {
+  opacity: 1;
+}
+
+.my-list-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(42, 42, 42, 0.85);
+  color: #fff;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.my-list-btn.pill {
+  padding: 0.5rem 1rem;
+}
+
+.my-list-btn.icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.my-list-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.my-list-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.my-list-btn.active {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.2);
+}
+

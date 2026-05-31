@@ -7,9 +7,17 @@ interface VideoPlayerProps {
   mp4Url?: string;
   hlsUrl?: string;
   poster?: string;
+  startTime?: number;
+  onProgress?: (progress: number, duration: number) => void;
 }
 
-export default function VideoPlayer({ mp4Url, hlsUrl, poster }: VideoPlayerProps) {
+export default function VideoPlayer({
+  mp4Url,
+  hlsUrl,
+  poster,
+  startTime = 0,
+  onProgress,
+}: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,8 +38,15 @@ export default function VideoPlayer({ mp4Url, hlsUrl, poster }: VideoPlayerProps
     video.removeAttribute('src');
     video.load();
 
+    const seekToStart = () => {
+      if (startTime > 0 && Number.isFinite(video.duration)) {
+        video.currentTime = Math.min(startTime, video.duration - 5);
+      }
+    };
+
     if (mp4Url) {
       const onReady = () => {
+        seekToStart();
         setLoading(false);
         video.play().catch(() => undefined);
       };
@@ -59,14 +74,12 @@ export default function VideoPlayer({ mp4Url, hlsUrl, poster }: VideoPlayerProps
     const src = proxyStreamUrl(hlsUrl);
 
     if (Hls.isSupported()) {
-      const hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: false,
-      });
+      const hls = new Hls({ enableWorker: true, lowLatencyMode: false });
       hlsRef.current = hls;
       hls.loadSource(src);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        seekToStart();
         setLoading(false);
         video.play().catch(() => undefined);
       });
@@ -82,7 +95,10 @@ export default function VideoPlayer({ mp4Url, hlsUrl, poster }: VideoPlayerProps
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = src;
-      video.addEventListener('loadedmetadata', () => setLoading(false), { once: true });
+      video.addEventListener('loadedmetadata', () => {
+        seekToStart();
+        setLoading(false);
+      }, { once: true });
       video.play().catch(() => undefined);
     } else {
       setError('HLS playback is not supported in this browser.');
@@ -95,7 +111,27 @@ export default function VideoPlayer({ mp4Url, hlsUrl, poster }: VideoPlayerProps
         hlsRef.current = null;
       }
     };
-  }, [mp4Url, hlsUrl]);
+  }, [mp4Url, hlsUrl, startTime]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !onProgress) return;
+
+    const tick = () => {
+      if (video.duration && !video.paused) {
+        onProgress(video.currentTime, video.duration);
+      }
+    };
+
+    const interval = window.setInterval(tick, 5000);
+    const onPause = () => onProgress(video.currentTime, video.duration || 0);
+    video.addEventListener('pause', onPause);
+
+    return () => {
+      clearInterval(interval);
+      video.removeEventListener('pause', onPause);
+    };
+  }, [onProgress]);
 
   if (error) {
     return (

@@ -5,10 +5,11 @@ import './movies.css';
 
 interface MovieRowProps {
   title: string;
+  subtitle?: string;
   movies: Movie[];
 }
 
-export default function MovieRow({ title, movies }: MovieRowProps) {
+export default function MovieRow({ title, subtitle, movies }: MovieRowProps) {
   const trackRef = useRef<HTMLDivElement>(null);
 
   if (!movies.length) return null;
@@ -23,7 +24,10 @@ export default function MovieRow({ title, movies }: MovieRowProps) {
   return (
     <section className="movie-row">
       <div className="movie-row-header">
-        <h2 className="section-title">{title}</h2>
+        <div>
+          <h2 className="section-title">{title}</h2>
+          {subtitle && <p className="row-subtitle">{subtitle}</p>}
+        </div>
       </div>
       <div className="movie-row-track-wrap">
         <button

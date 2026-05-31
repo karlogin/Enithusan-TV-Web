@@ -6,11 +6,16 @@ A Netflix-style streaming front-end for [Einthusan.tv](https://einthusan.tv), su
 
 ## Features
 
-- Netflix-like home page with hero banner and horizontal movie rows
-- Language filter (Tamil / Hindi / Malayalam) in the navbar
+- Netflix-style home page with hero banner, curated row titles, and horizontal carousels
+- **Continue Watching** — resume where you left off (saved locally; syncs when signed in)
+- **My List** — save titles to watch later
+- **Sign in / Register** — sync your list across devices
+- **IMDb metadata** on movie pages — ratings, cast, director, runtime (via OMDB API)
+- Language filter (Tamil / Hindi / Malayalam)
 - Search with language-scoped results
-- HLS video playback with quality streaming
-- Deployable to **GitHub Pages** (static UI) + **Cloudflare Workers** (API proxy)
+- MP4 streaming with progress tracking
+- **Install as a web app** on iOS and Android — see [docs/INSTALL.md](docs/INSTALL.md)
+- Deployable to **GitHub Pages** (static UI) + **Cloudflare Workers** (API + auth)
 
 ## Architecture
 
@@ -124,7 +129,15 @@ GitHub provisions HTTPS once DNS resolves. SSL can take up to 24 hours; usually 
 | Variable | Description |
 |----------|-------------|
 | `VITE_API_BASE` | Worker API base URL (required for production) |
-| `VITE_BASE_PATH` | GitHub Pages base path (auto-set in CI) |
+| `VITE_BASE_PATH` | Site base path (auto-set in CI) |
+
+### Worker secrets (optional but recommended)
+
+```bash
+cd worker
+npx wrangler secret put OMDB_API_KEY   # IMDb ratings & cast — free at omdbapi.com
+npx wrangler secret put AUTH_SECRET    # random string for session security
+```
 
 Copy `.env.example` to `.env.local` for local overrides:
 
@@ -138,8 +151,12 @@ cp .env.example .env.local
 |----------|-------------|
 | `GET /api/home?lang=tamil` | Home page catalog + featured rows |
 | `GET /api/search?q=kara&lang=tamil` | Search movies |
-| `GET /api/movie/:id?lang=tamil` | Movie details + HLS stream URL |
+| `GET /api/movie/:id?lang=tamil` | Movie details + stream URLs + IMDb metadata |
 | `GET /api/stream?url=...` | Proxied HLS manifest/segments |
+| `POST /api/auth/register` | Create account |
+| `POST /api/auth/login` | Sign in |
+| `GET /api/auth/me` | Current user (Bearer token) |
+| `GET/PUT /api/user/library` | My List + Continue Watching sync |
 
 ## Supported languages
 

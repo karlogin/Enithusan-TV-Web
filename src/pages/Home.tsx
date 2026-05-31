@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { getHome } from '../api';
-import { useLanguage } from '../context/LanguageContext';
+import ContinueWatchingRow from '../components/ContinueWatchingRow';
 import HeroBanner from '../components/HeroBanner';
 import MovieRow from '../components/MovieRow';
-import type { HomeData } from '../types';
+import { useLanguage } from '../context/LanguageContext';
+import { useUserLibrary } from '../context/UserLibraryContext';
+import { HOME_SECTIONS, type HomeData } from '../types';
 
 export default function Home() {
   const { language } = useLanguage();
+  const { continueWatching } = useUserLibrary();
   const [data, setData] = useState<HomeData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,12 +65,13 @@ export default function Home() {
     <>
       {hero && <HeroBanner movie={hero} />}
       <div className="page-content" style={{ marginTop: hero ? '-4rem' : '1rem', position: 'relative', zIndex: 2 }}>
-        <MovieRow title="Most Watched" movies={data.featured.mostWatched} />
-        <MovieRow title="Recently Added" movies={data.featured.recentlyAdded} />
-        <MovieRow title="Staff Picks" movies={data.featured.staffPicks} />
-        <MovieRow title="Regional Hits" movies={data.featured.regionalHits} />
-        <MovieRow title="Trending Now" movies={data.browse} />
-        <MovieRow title="Coming Soon" movies={data.featured.comingSoon} />
+        <ContinueWatchingRow items={continueWatching} />
+        {HOME_SECTIONS.map(({ key, title, subtitle }) => {
+          const movies = key === 'browse' ? data.browse : data.featured[key];
+          return (
+            <MovieRow key={key} title={title} subtitle={subtitle} movies={movies} />
+          );
+        })}
       </div>
     </>
   );

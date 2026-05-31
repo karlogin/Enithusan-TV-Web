@@ -122,8 +122,77 @@
   .navbar-links {
     display: none;
   }
+}
 
-  .navbar-logo {
-    font-size: 1.35rem;
-  }
+.navbar-auth {
+  display: flex;
+  align-items: center;
+}
+
+.nav-signin {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: 0.4rem 0.75rem;
+  border-radius: 4px;
+  background: var(--netflix-red);
+}
+
+.nav-signin:hover {
+  background: #f40612;
+}
+
+.profile-menu {
+  position: relative;
+}
+
+.profile-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: #0080ff;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 200px;
+  background: rgba(0, 0, 0, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.profile-name {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.profile-email {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.profile-dropdown a,
+.profile-dropdown button {
+  text-align: left;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  padding: 0.35rem 0;
+  background: none;
+}
+
+.profile-dropdown a:hover,
+.profile-dropdown button:hover {
+  color: #fff;
 }

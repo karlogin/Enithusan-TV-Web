@@ -1,13 +1,16 @@
 const USER_AGENT =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
+import { handleAuth, handleUserLibrary } from './auth.js';
+import { lookupImdb } from './imdb.js';
+
 const BASE = 'https://einthusan.tv';
 const VALID_LANGS = new Set(['tamil', 'hindi', 'malayalam']);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
 /** @type {Map<string, { data: object, expires: number }>} */
@@ -349,11 +352,24 @@ async function getMovieDetailsImpl(id, lang) {
     uhd,
     hlsUrl,
     mp4Url,
+    year: html.match(/class="info"[^>]*><p>(\d{4})/)?.[1] ?? null,
   };
 }
 
-/** @param {string} id @param {string} lang */
-async function getMovieDetails(id, lang) {
+/** @param {object} details @param {object} env */
+async function enrichWithImdb(details, env) {
+  const year = details.year ?? null;
+  const imdb = await lookupImdb(env, details.title, year);
+  if (!imdb) return details;
+  return {
+    ...details,
+    ...imdb,
+    description: details.description || imdb.plot || '',
+  };
+}
+
+/** @param {string} id @param {string} lang @param {object} env */
+async function getMovieDetails(id, lang, env) {
   const cacheKey = `${id}:${lang}`;
   const cached = movieCache.get(cacheKey);
   if (cached && cached.expires > Date.now()) {
@@ -365,6 +381,7 @@ async function getMovieDetails(id, lang) {
   }
 
   const promise = getMovieDetailsImpl(id, lang)
+    .then((data) => enrichWithImdb(data, env))
     .then((data) => {
       movieCache.set(cacheKey, { data, expires: Date.now() + MOVIE_CACHE_TTL_MS });
       movieInflight.delete(cacheKey);
@@ -453,8 +470,8 @@ async function proxyStream(request) {
 }
 
 export default {
-  /** @param {Request} request @param {object} _env @param {ExecutionContext} ctx */
-  async fetch(request, _env, ctx) {
+  /** @param {Request} request @param {object} env @param {ExecutionContext} ctx */
+  async fetch(request, env, ctx) {
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders });
     }
@@ -463,6 +480,12 @@ export default {
     const path = url.pathname.replace(/\/$/, '') || '/';
 
     try {
+      const authResponse = await handleAuth(request, env, corsHeaders);
+      if (authResponse) return authResponse;
+
+      const libraryResponse = await handleUserLibrary(request, env, corsHeaders);
+      if (libraryResponse) return libraryResponse;
+
       if (path === '/api/home' || path === '/home') {
         const lang = url.searchParams.get('lang') ?? 'tamil';
         if (!VALID_LANGS.has(lang)) {
@@ -492,7 +515,7 @@ export default {
         if (!VALID_LANGS.has(lang)) {
           return Response.json({ error: 'Invalid language' }, { status: 400, headers: corsHeaders });
         }
-        const details = await getMovieDetails(id, lang);
+        const details = await getMovieDetails(id, lang, env);
         return Response.json(details, { headers: { ...corsHeaders, 'Cache-Control': 'no-store' } });
       }
 

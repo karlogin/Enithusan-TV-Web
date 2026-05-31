@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
+import Logo from './Logo';
+import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { LANGUAGES } from '../types';
 import './navbar.css';
 
 export default function Navbar() {
   const { language, setLanguage } = useLanguage();
+  const { user, logout, loading } = useAuth();
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState('');
 
   useEffect(() => {
@@ -28,9 +32,7 @@ export default function Navbar() {
   return (
     <header className={`navbar ${scrolled ? 'scrolled' : ''}`}>
       <div className="navbar-left">
-        <Link to="/" className="navbar-logo">
-          EINTHUSAN
-        </Link>
+        <Logo />
         <ul className="navbar-links">
           <li>
             <NavLink to="/" end className={({ isActive }) => (isActive ? 'active' : '')}>
@@ -40,6 +42,11 @@ export default function Navbar() {
           <li>
             <NavLink to="/browse" className={({ isActive }) => (isActive ? 'active' : '')}>
               Browse
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/my-list" className={({ isActive }) => (isActive ? 'active' : '')}>
+              My List
             </NavLink>
           </li>
         </ul>
@@ -87,6 +94,45 @@ export default function Navbar() {
             </svg>
           </button>
         </form>
+
+        {!loading && (
+          <div className="navbar-auth">
+            {user ? (
+              <div className="profile-menu">
+                <button
+                  type="button"
+                  className="profile-btn"
+                  onClick={() => setMenuOpen((v) => !v)}
+                  aria-expanded={menuOpen}
+                >
+                  {user.name.charAt(0).toUpperCase()}
+                </button>
+                {menuOpen && (
+                  <div className="profile-dropdown">
+                    <p className="profile-name">{user.name}</p>
+                    <p className="profile-email">{user.email}</p>
+                    <Link to="/my-list" onClick={() => setMenuOpen(false)}>
+                      My List
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await logout();
+                        setMenuOpen(false);
+                      }}
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link to="/login" className="nav-signin">
+                Sign In
+              </Link>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );
