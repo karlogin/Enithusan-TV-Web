@@ -62,8 +62,9 @@
   margin: 0;
 }
 
-.imdb-badge {
-  color: #f5c518 !important;
+.imdb-badge,
+.rating-badge {
+  color: #46d369 !important;
   font-weight: 700;
 }
 

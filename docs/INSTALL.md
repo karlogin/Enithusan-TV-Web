@@ -79,14 +79,9 @@ Test manifest in Chrome DevTools → **Application** → **Manifest**.
 
 ---
 
-## Optional: enable IMDb metadata
-
-Movie pages show ratings, cast, and runtime when the API has an OMDB key:
+## Optional: production auth secret
 
 ```bash
 cd worker
-npx wrangler secret put OMDB_API_KEY   # free key: https://www.omdbapi.com/apikey.aspx
 npx wrangler secret put AUTH_SECRET    # random string for production auth
 ```
-
-Get a free API key at [omdbapi.com](https://www.omdbapi.com/apikey.aspx).

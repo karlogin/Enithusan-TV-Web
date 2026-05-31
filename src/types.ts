@@ -10,19 +10,16 @@ export interface Movie {
   comingSoon?: boolean;
 }
 
-export interface ImdbInfo {
-  imdbId?: string;
-  imdbRating?: string | null;
-  metascore?: string | null;
-  runtime?: string | null;
+export interface MovieExtras {
+  userRating?: string | null;
   genre?: string | null;
   director?: string | null;
+  musicDirector?: string | null;
   cast?: string | null;
-  rated?: string | null;
-  imdbUrl?: string | null;
+  imdbSearchUrl?: string;
 }
 
-export interface MovieDetails extends Movie, ImdbInfo {
+export interface MovieDetails extends Movie, MovieExtras {
   description?: string;
   hlsUrl?: string;
   mp4Url?: string;

@@ -2,7 +2,6 @@ const USER_AGENT =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 import { handleAuth, handleUserLibrary } from './auth.js';
-import { lookupImdb } from './imdb.js';
 
 const BASE = 'https://einthusan.tv';
 const VALID_LANGS = new Set(['tamil', 'hindi', 'malayalam']);
@@ -321,6 +320,35 @@ async function getMovieStream(id, lang) {
   return resolveStreamFromPage(decodeHtmlEntities(html), id, lang, watchUrl, cookies);
 }
 
+/** @param {string} html */
+function parseMovieExtras(html) {
+  /** @type {{ name: string, role: string }[]} */
+  const profs = [];
+  const profRe = /<div class="prof"><p>([^<]+)<\/p><label>([^<]+)<\/label><\/div>/g;
+  let m;
+  while ((m = profRe.exec(html)) !== null) {
+    profs.push({ name: m[1].trim(), role: m[2].trim() });
+  }
+
+  const cast = profs
+    .filter((p) => p.role === 'Lead' || p.role === 'Supporting')
+    .map((p) => p.name)
+    .join(', ');
+
+  const director = profs.find((p) => p.role === 'Director')?.name ?? null;
+  const musicDirector = profs.find((p) => p.role === 'Music Director')?.name ?? null;
+
+  const genreRaw = html.match(/data-genre="([^"]+)"/)?.[1];
+  const genre = genreRaw
+    ? genreRaw.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    : null;
+
+  const ratingMatch = html.match(/title="overall rating"[^>]*>[^<]*<\/i>\s*([\d.]+)/);
+  const userRating = ratingMatch?.[1] ?? null;
+
+  return { cast: cast || null, director, musicDirector, genre, userRating };
+}
+
 /** @param {string} id @param {string} lang */
 async function getMovieDetailsImpl(id, lang) {
   const watchUrl = `${BASE}/movie/watch/${id}/?lang=${lang}`;
@@ -342,6 +370,8 @@ async function getMovieDetailsImpl(id, lang) {
   if (contentTitle) title = contentTitle[1];
 
   const { hlsUrl, mp4Url } = await resolveStreamFromPage(html, id, lang, watchUrl, cookies);
+  const extras = parseMovieExtras(html);
+  const year = html.match(/class="info"[^>]*><p>(\d{4})/)?.[1] ?? null;
 
   return {
     id,
@@ -352,24 +382,14 @@ async function getMovieDetailsImpl(id, lang) {
     uhd,
     hlsUrl,
     mp4Url,
-    year: html.match(/class="info"[^>]*><p>(\d{4})/)?.[1] ?? null,
+    year,
+    ...extras,
+    imdbSearchUrl: `https://www.imdb.com/find/?q=${encodeURIComponent(title + (year ? ` ${year}` : ''))}`,
   };
 }
 
-/** @param {object} details @param {object} env */
-async function enrichWithImdb(details, env) {
-  const year = details.year ?? null;
-  const imdb = await lookupImdb(env, details.title, year);
-  if (!imdb) return details;
-  return {
-    ...details,
-    ...imdb,
-    description: details.description || imdb.plot || '',
-  };
-}
-
-/** @param {string} id @param {string} lang @param {object} env */
-async function getMovieDetails(id, lang, env) {
+/** @param {string} id @param {string} lang */
+async function getMovieDetails(id, lang) {
   const cacheKey = `${id}:${lang}`;
   const cached = movieCache.get(cacheKey);
   if (cached && cached.expires > Date.now()) {
@@ -381,7 +401,6 @@ async function getMovieDetails(id, lang, env) {
   }
 
   const promise = getMovieDetailsImpl(id, lang)
-    .then((data) => enrichWithImdb(data, env))
     .then((data) => {
       movieCache.set(cacheKey, { data, expires: Date.now() + MOVIE_CACHE_TTL_MS });
       movieInflight.delete(cacheKey);
@@ -515,7 +534,7 @@ export default {
         if (!VALID_LANGS.has(lang)) {
           return Response.json({ error: 'Invalid language' }, { status: 400, headers: corsHeaders });
         }
-        const details = await getMovieDetails(id, lang, env);
+        const details = await getMovieDetails(id, lang);
         return Response.json(details, { headers: { ...corsHeaders, 'Cache-Control': 'no-store' } });
       }
 

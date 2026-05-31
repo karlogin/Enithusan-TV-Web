@@ -103,23 +103,27 @@ export default function Watch() {
           <MyListButton movie={movie} />
         </div>
         <div className="watch-meta">
-          {movie.imdbRating && (
-            <span className="imdb-badge">★ {movie.imdbRating} IMDb</span>
+          {movie.userRating && (
+            <span className="rating-badge">★ {movie.userRating}</span>
           )}
           {movie.year && <span>{movie.year}</span>}
-          {movie.runtime && <span>{movie.runtime}</span>}
-          {movie.rated && <span className="muted">{movie.rated}</span>}
           <span className="muted">{LANGUAGE_LABELS[movie.lang]}</span>
           {movie.uhd && <span className="muted">Ultra HD</span>}
         </div>
         {movie.genre && <p className="watch-genre">{movie.genre}</p>}
         {movie.description && <p className="watch-description">{movie.description}</p>}
-        {(movie.director || movie.cast) && (
+        {(movie.director || movie.musicDirector || movie.cast) && (
           <dl className="watch-details">
             {movie.director && (
               <>
                 <dt>Director</dt>
                 <dd>{movie.director}</dd>
+              </>
+            )}
+            {movie.musicDirector && (
+              <>
+                <dt>Music</dt>
+                <dd>{movie.musicDirector}</dd>
               </>
             )}
             {movie.cast && (
@@ -130,9 +134,9 @@ export default function Watch() {
             )}
           </dl>
         )}
-        {movie.imdbUrl && (
-          <a href={movie.imdbUrl} target="_blank" rel="noopener noreferrer" className="imdb-link">
-            View on IMDb →
+        {movie.imdbSearchUrl && (
+          <a href={movie.imdbSearchUrl} target="_blank" rel="noopener noreferrer" className="imdb-link">
+            Search on IMDb →
           </a>
         )}
       </div>
