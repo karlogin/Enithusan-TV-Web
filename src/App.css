@@ -1,0 +1,102 @@
+.app {
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
+.page {
+  padding-top: var(--nav-height);
+  min-height: 100vh;
+}
+
+.page-content {
+  padding: 0 4%;
+  padding-bottom: 4rem;
+}
+
+.loading-screen,
+.error-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 1rem;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 2rem;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: var(--netflix-red);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.4rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--text-primary);
+  color: #000;
+}
+
+.btn-primary:hover {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.btn-secondary {
+  background: rgba(109, 109, 110, 0.7);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  background: rgba(109, 109, 110, 0.5);
+}
+
+.btn-play {
+  background: var(--text-primary);
+  color: #000;
+  padding: 0.65rem 1.75rem;
+  font-size: 1.1rem;
+}
+
+.btn-play svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+.section-title {
+  font-size: 1.4vw;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+  .section-title {
+    font-size: 1.1rem;
+  }
+}

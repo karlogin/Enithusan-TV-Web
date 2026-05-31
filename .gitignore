@@ -1,0 +1,24 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+node_modules
+dist
+dist-ssr
+*.tsbuildinfo
+*.local
+.env
+.env.*
+!.env.example
+
+# Editor
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+
+# Temp scrape files
+tmp_*.html
+
+# Wrangler
+worker/.wrangler
+.dev.vars

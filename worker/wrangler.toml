@@ -1,0 +1,6 @@
+name = "einthusan-tv-api"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+
+[dev]
+port = 8787

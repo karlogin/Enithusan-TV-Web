@@ -1,0 +1,129 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: var(--nav-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4%;
+  transition: background 0.3s;
+}
+
+.navbar.scrolled {
+  background: var(--bg-primary);
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.navbar-logo {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--netflix-red);
+  letter-spacing: -0.5px;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 1.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-links a {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+
+.navbar-links a:hover,
+.navbar-links a.active {
+  color: var(--text-primary);
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.language-select {
+  appearance: none;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: var(--text-primary);
+  padding: 0.4rem 2rem 0.4rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23fff' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+}
+
+.language-select:hover,
+.language-select:focus {
+  border-color: rgba(255, 255, 255, 0.5);
+  outline: none;
+}
+
+.search-form {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search-toggle {
+  color: var(--text-primary);
+  padding: 0.35rem;
+  display: flex;
+  align-items: center;
+}
+
+.search-toggle svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+.search-input-wrap {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  transition: max-width 0.3s, opacity 0.3s;
+  border-bottom: 1px solid var(--text-primary);
+}
+
+.search-input-wrap.open {
+  max-width: 240px;
+  opacity: 1;
+}
+
+.search-input {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  padding: 0.35rem 0.5rem;
+  width: 200px;
+  outline: none;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+  .navbar-links {
+    display: none;
+  }
+
+  .navbar-logo {
+    font-size: 1.35rem;
+  }
+}
