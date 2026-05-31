@@ -196,3 +196,14 @@
 .profile-dropdown button:hover {
   color: #fff;
 }
+
+.theme-toggle {
+  font-size: 1rem;
+  padding: 0.35rem 0.5rem;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+.theme-toggle:hover {
+  opacity: 1;
+}

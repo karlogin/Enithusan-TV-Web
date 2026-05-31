@@ -13,8 +13,9 @@ export default function MovieCard({ movie }: MovieCardProps) {
       <img
         className="movie-card-poster"
         src={movie.poster}
-        alt={movie.title}
+        alt={`${movie.title} poster`}
         loading="lazy"
+        decoding="async"
       />
       <div className="movie-card-overlay">
         <p className="movie-card-title">{movie.title}</p>

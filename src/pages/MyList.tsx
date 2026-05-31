@@ -1,9 +1,10 @@
 import MovieCard from '../components/MovieCard';
+import { exportLibrary } from '../utils/libraryExport';
 import { useUserLibrary } from '../context/UserLibraryContext';
 import '../components/movies.css';
 
 export default function MyList() {
-  const { myList } = useUserLibrary();
+  const { myList, continueWatching } = useUserLibrary();
 
   return (
     <div className="page">
@@ -16,6 +17,17 @@ export default function MyList() {
               : `${myList.length} title${myList.length === 1 ? '' : 's'} saved`}
           </p>
         </div>
+        {myList.length > 0 && (
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => exportLibrary({ myList, continueWatching, exportedAt: Date.now() })}
+            >
+              Export JSON
+            </button>
+          </div>
+        )}
         {myList.length === 0 ? (
           <div className="empty-state">
             <p>Your list is empty.</p>

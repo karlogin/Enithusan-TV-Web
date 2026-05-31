@@ -6,16 +6,21 @@ A Netflix-style streaming front-end for [Einthusan.tv](https://einthusan.tv), su
 
 ## Features
 
-- Netflix-style home page with hero banner, curated row titles, and horizontal carousels
-- **Continue Watching** — resume where you left off (saved locally; syncs when signed in)
-- **My List** — save titles to watch later
-- **Sign in / Register** — sync your list across devices
-- **Movie details** on watch pages — cast, director, genre, and user rating scraped from Einthusan
-- Language filter (Tamil / Hindi / Malayalam)
-- Search with language-scoped results
-- MP4 streaming with progress tracking
-- **Install as a web app** on iOS and Android — see [docs/INSTALL.md](docs/INSTALL.md)
-- Deployable to **GitHub Pages** (static UI) + **Cloudflare Workers** (API + auth)
+- Netflix-style UI with **rotating hero**, **Top 10** row, **Because you watched**, and curated section titles
+- **Continue Watching** with progress bars; **My List** with export/import JSON
+- **Profiles** — separate lists per profile (Main, Kids, etc.)
+- **Sign in / Register** with password reset and account management
+- **Highest quality streams** — UHD attempted first when available, then HD fallback
+- **Auto stream refresh** on playback errors (expired CDN links)
+- **Movie detail modal** from hero “More Info”
+- **Browse filters** — Ultra HD and year
+- **Recent searches**, keyboard shortcuts (`/` search, Alt+H home, Alt+B browse, Alt+L list)
+- **Light / dark / system theme**
+- **Loading skeletons**, branded **404**, **About** page
+- **Cast hints** (AirPlay / Chromecast) on watch page
+- **Service worker** for faster repeat visits
+- **PWA install** — see [docs/INSTALL.md](docs/INSTALL.md)
+- Metadata scraped from Einthusan (cast, director, genre, rating)
 
 ## Architecture
 

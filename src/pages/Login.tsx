@@ -47,6 +47,8 @@ export default function Login() {
           </button>
         </form>
         <p className="auth-footer">
+          <Link to="/forgot-password">Forgot password?</Link>
+          {' · '}
           New here? <Link to="/register">Create an account</Link>
         </p>
       </div>

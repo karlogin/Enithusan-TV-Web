@@ -18,11 +18,6 @@ function kv(env) {
   };
 }
 
-/** @param {object} env */
-function authSecret(env) {
-  return env.AUTH_SECRET || 'dev-only-change-in-production';
-}
-
 /** @param {string} password @param {string} salt */
 async function hashPassword(password, salt) {
   const enc = new TextEncoder();
@@ -44,6 +39,16 @@ function randomToken() {
 
 function json(data, status = 200, headers = {}) {
   return Response.json(data, { status, headers });
+}
+
+function libraryKey(userId, profileId = 'default') {
+  return `library:${userId}:${profileId}`;
+}
+
+/** @param {Request} request */
+function profileIdFromRequest(request) {
+  const url = new URL(request.url);
+  return url.searchParams.get('profileId') || 'default';
 }
 
 /** @param {Request} request @param {object} env */
@@ -91,11 +96,7 @@ export async function handleAuth(request, env, corsHeaders) {
     const token = randomToken();
     await kv(env).put(`session:${token}`, userId, { expirationTtl: SESSION_TTL_SEC });
 
-    return json(
-      { token, user: { id: userId, email, name } },
-      201,
-      corsHeaders,
-    );
+    return json({ token, user: { id: userId, email, name } }, 201, corsHeaders);
   }
 
   if (path === '/api/auth/login' && request.method === 'POST') {
@@ -143,6 +144,83 @@ export async function handleAuth(request, env, corsHeaders) {
     return json({ ok: true }, 200, corsHeaders);
   }
 
+  if (path === '/api/auth/forgot-password' && request.method === 'POST') {
+    const body = await request.json();
+    const email = String(body.email ?? '')
+      .trim()
+      .toLowerCase();
+    const userId = await kv(env).get(`email:${email}`);
+    if (userId) {
+      const token = randomToken();
+      await kv(env).put(`reset:${token}`, userId, { expirationTtl: 3600 });
+      const appUrl = env.APP_URL || 'https://einthusan.mainframe.website';
+      const resetUrl = `${appUrl}/reset-password?token=${token}`;
+      if (env.MAIL_FROM) {
+        try {
+          await fetch('https://api.mailchannels.net/tx/v1/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              personalizations: [{ to: [{ email }] }],
+              from: { email: env.MAIL_FROM, name: 'Einthusan TV' },
+              subject: 'Reset your password',
+              content: [{ type: 'text/plain', value: `Reset your password: ${resetUrl}` }],
+            }),
+          });
+        } catch {
+          /* ignore */
+        }
+      } else if (env.DEV_SHOW_RESET_LINK === 'true') {
+        return json({ ok: true, resetUrl }, 200, corsHeaders);
+      }
+    }
+    return json({ ok: true, message: 'If that email exists, reset instructions were sent.' }, 200, corsHeaders);
+  }
+
+  if (path === '/api/auth/reset-password' && request.method === 'POST') {
+    const body = await request.json();
+    const token = String(body.token ?? '');
+    const password = String(body.password ?? '');
+    if (password.length < 6) {
+      return json({ error: 'Password must be at least 6 characters' }, 400, corsHeaders);
+    }
+    const userId = await kv(env).get(`reset:${token}`);
+    if (!userId) {
+      return json({ error: 'Invalid or expired reset link' }, 400, corsHeaders);
+    }
+    const raw = await kv(env).get(`user:${userId}`);
+    if (!raw) {
+      return json({ error: 'Invalid or expired reset link' }, 400, corsHeaders);
+    }
+    const user = JSON.parse(raw);
+    const salt = randomToken().slice(0, 16);
+    user.salt = salt;
+    user.passwordHash = await hashPassword(password, salt);
+    await kv(env).put(`user:${userId}`, JSON.stringify(user));
+    await kv(env).delete(`reset:${token}`);
+    return json({ ok: true }, 200, corsHeaders);
+  }
+
+  if (path === '/api/auth/change-password' && request.method === 'POST') {
+    const user = await getSessionUser(request, env);
+    if (!user) return json({ error: 'Not authenticated' }, 401, corsHeaders);
+    const body = await request.json();
+    const current = String(body.currentPassword ?? '');
+    const next = String(body.newPassword ?? '');
+    if (next.length < 6) {
+      return json({ error: 'New password must be at least 6 characters' }, 400, corsHeaders);
+    }
+    const hash = await hashPassword(current, user.salt);
+    if (hash !== user.passwordHash) {
+      return json({ error: 'Current password is incorrect' }, 401, corsHeaders);
+    }
+    const salt = randomToken().slice(0, 16);
+    user.salt = salt;
+    user.passwordHash = await hashPassword(next, salt);
+    await kv(env).put(`user:${user.id}`, JSON.stringify(user));
+    return json({ ok: true }, 200, corsHeaders);
+  }
+
   return null;
 }
 
@@ -156,7 +234,15 @@ export async function handleUserLibrary(request, env, corsHeaders) {
     return json({ error: 'Not authenticated' }, 401, corsHeaders);
   }
 
-  const key = `library:${user.id}`;
+  let profileId = profileIdFromRequest(request);
+  let body = null;
+
+  if (request.method === 'PUT') {
+    body = await request.json();
+    if (body.profileId) profileId = String(body.profileId);
+  }
+
+  const key = libraryKey(user.id, profileId);
 
   if (request.method === 'GET') {
     const raw = await kv(env).get(key);
@@ -164,8 +250,7 @@ export async function handleUserLibrary(request, env, corsHeaders) {
     return json(library, 200, corsHeaders);
   }
 
-  if (request.method === 'PUT') {
-    const body = await request.json();
+  if (request.method === 'PUT' && body) {
     const library = {
       myList: Array.isArray(body.myList) ? body.myList : [],
       continueWatching: Array.isArray(body.continueWatching) ? body.continueWatching : [],

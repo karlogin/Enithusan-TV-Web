@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { getMovie } from '../api';
+import { getMovie, refreshStream } from '../api';
+import CastHint from '../components/CastHint';
 import MyListButton from '../components/MyListButton';
 import VideoPlayer from '../components/VideoPlayer';
 import { useLanguage } from '../context/LanguageContext';
@@ -43,6 +44,17 @@ export default function Watch() {
     return () => {
       cancelled = true;
     };
+  }, [id, lang]);
+
+  const onStreamError = useCallback(async () => {
+    if (!id) return null;
+    try {
+      const fresh = await refreshStream(id, lang);
+      setMovie((m) => (m ? { ...m, ...fresh } : m));
+      return fresh;
+    } catch {
+      return null;
+    }
   }, [id, lang]);
 
   if (loading) {
@@ -89,6 +101,7 @@ export default function Watch() {
             poster={movie.poster}
             startTime={startTime}
             onProgress={(progress, duration) => updateProgress(movie, progress, duration)}
+            onStreamError={onStreamError}
           />
         ) : (
           <div className="player-error">
@@ -103,12 +116,13 @@ export default function Watch() {
           <MyListButton movie={movie} />
         </div>
         <div className="watch-meta">
-          {movie.userRating && (
-            <span className="rating-badge">★ {movie.userRating}</span>
+          {movie.streamQuality && (
+            <span className="quality-badge">{movie.streamQuality === 'UHD' ? 'Ultra HD' : 'HD'}</span>
           )}
+          {movie.userRating && <span className="rating-badge">★ {movie.userRating}</span>}
           {movie.year && <span>{movie.year}</span>}
           <span className="muted">{LANGUAGE_LABELS[movie.lang]}</span>
-          {movie.uhd && <span className="muted">Ultra HD</span>}
+          {movie.uhd && <span className="muted">Ultra HD available</span>}
         </div>
         {movie.genre && <p className="watch-genre">{movie.genre}</p>}
         {movie.description && <p className="watch-description">{movie.description}</p>}
@@ -134,6 +148,7 @@ export default function Watch() {
             )}
           </dl>
         )}
+        <CastHint />
         {movie.imdbSearchUrl && (
           <a href={movie.imdbSearchUrl} target="_blank" rel="noopener noreferrer" className="imdb-link">
             Search on IMDb →

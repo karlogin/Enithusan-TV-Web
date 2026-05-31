@@ -17,6 +17,8 @@ export interface MovieExtras {
   musicDirector?: string | null;
   cast?: string | null;
   imdbSearchUrl?: string;
+  streamQuality?: string;
+  hasUhd?: boolean;
 }
 
 export interface MovieDetails extends Movie, MovieExtras {

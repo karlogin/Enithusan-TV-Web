@@ -1,18 +1,34 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Movie } from '../types';
 import { LANGUAGE_LABELS } from '../types';
 import './hero.css';
 
 interface HeroBannerProps {
-  movie: Movie;
+  movies: Movie[];
+  onMoreInfo: (movie: Movie) => void;
 }
 
-export default function HeroBanner({ movie }: HeroBannerProps) {
+export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
+  const [index, setIndex] = useState(0);
+  const movie = movies[index] ?? movies[0];
+
+  useEffect(() => {
+    if (movies.length <= 1) return;
+    const t = window.setInterval(() => {
+      setIndex((i) => (i + 1) % movies.length);
+    }, 8000);
+    return () => clearInterval(t);
+  }, [movies.length]);
+
+  if (!movie) return null;
+
   return (
     <section className="hero">
       <div
         className="hero-backdrop"
         style={{ backgroundImage: `url(${movie.poster})` }}
+        key={movie.id}
       />
       <div className="hero-content">
         <h1 className="hero-title">{movie.title}</h1>
@@ -28,10 +44,23 @@ export default function HeroBanner({ movie }: HeroBannerProps) {
             </svg>
             Play
           </Link>
-          <Link to={`/watch/${movie.id}?lang=${movie.lang}`} className="btn btn-secondary">
+          <button type="button" className="btn btn-secondary" onClick={() => onMoreInfo(movie)}>
             More Info
-          </Link>
+          </button>
         </div>
+        {movies.length > 1 && (
+          <div className="hero-dots" aria-label="Featured titles">
+            {movies.map((m, i) => (
+              <button
+                key={m.id}
+                type="button"
+                className={i === index ? 'active' : ''}
+                aria-label={`Show ${m.title}`}
+                onClick={() => setIndex(i)}
+              />
+            ))}
+          </div>
+        )}
       </div>
       <div className="hero-vignette" />
     </section>

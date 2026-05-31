@@ -1,23 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { getUserLibrary, saveUserLibrary } from '../api';
+import { profileStorageKey, useProfile } from './ProfileContext';
 import { useAuth } from './AuthContext';
 import type { ContinueWatchingItem, Movie, UserLibrary } from '../types';
-
-const LIBRARY_KEY = 'einthusan-library';
-
-function loadLocalLibrary(): UserLibrary {
-  try {
-    const raw = localStorage.getItem(LIBRARY_KEY);
-    if (raw) return JSON.parse(raw) as UserLibrary;
-  } catch {
-    /* ignore */
-  }
-  return { myList: [], continueWatching: [] };
-}
-
-function saveLocalLibrary(library: UserLibrary) {
-  localStorage.setItem(LIBRARY_KEY, JSON.stringify(library));
-}
 
 interface UserLibraryContextValue {
   myList: Movie[];
@@ -26,38 +11,56 @@ interface UserLibraryContextValue {
   toggleMyList: (movie: Movie) => void;
   updateProgress: (movie: Movie, progress: number, duration: number) => void;
   removeFromContinueWatching: (id: string) => void;
+  importLibrary: (data: UserLibrary) => void;
 }
 
 const UserLibraryContext = createContext<UserLibraryContextValue | null>(null);
 
+function loadLocalLibrary(key: string): UserLibrary {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) return JSON.parse(raw) as UserLibrary;
+  } catch {
+    /* ignore */
+  }
+  return { myList: [], continueWatching: [] };
+}
+
 export function UserLibraryProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [library, setLibrary] = useState<UserLibrary>(loadLocalLibrary);
+  const { activeProfile } = useProfile();
+  const storageKey = profileStorageKey('einthusan-library', activeProfile.id);
+  const [library, setLibrary] = useState<UserLibrary>(() => loadLocalLibrary(storageKey));
+
+  useEffect(() => {
+    setLibrary(loadLocalLibrary(storageKey));
+  }, [storageKey]);
 
   useEffect(() => {
     if (!user) return;
-    getUserLibrary()
+    const local = loadLocalLibrary(storageKey);
+    getUserLibrary(activeProfile.id)
       .then((remote) => {
-        const local = loadLocalLibrary();
         const merged: UserLibrary = {
           myList: mergeMovies(remote.myList, local.myList),
           continueWatching: mergeContinue(remote.continueWatching, local.continueWatching),
         };
         setLibrary(merged);
-        saveLocalLibrary(merged);
+        localStorage.setItem(storageKey, JSON.stringify(merged));
+        saveUserLibrary(merged, activeProfile.id).catch(() => undefined);
       })
       .catch(() => undefined);
-  }, [user?.id]);
+  }, [user?.id, activeProfile.id, storageKey]);
 
   const persist = useCallback(
     (next: UserLibrary) => {
       setLibrary(next);
-      saveLocalLibrary(next);
+      localStorage.setItem(storageKey, JSON.stringify(next));
       if (user) {
-        saveUserLibrary(next).catch(() => undefined);
+        saveUserLibrary(next, activeProfile.id).catch(() => undefined);
       }
     },
-    [user],
+    [user, storageKey, activeProfile.id],
   );
 
   const isInMyList = useCallback(
@@ -108,6 +111,16 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
     [library, persist],
   );
 
+  const importLibrary = useCallback(
+    (data: UserLibrary) => {
+      persist({
+        myList: mergeMovies(library.myList, data.myList),
+        continueWatching: mergeContinue(library.continueWatching, data.continueWatching),
+      });
+    },
+    [library, persist],
+  );
+
   const value = useMemo(
     () => ({
       myList: library.myList,
@@ -116,8 +129,9 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
       toggleMyList,
       updateProgress,
       removeFromContinueWatching,
+      importLibrary,
     }),
-    [library, isInMyList, toggleMyList, updateProgress, removeFromContinueWatching],
+    [library, isInMyList, toggleMyList, updateProgress, removeFromContinueWatching, importLibrary],
   );
 
   return (

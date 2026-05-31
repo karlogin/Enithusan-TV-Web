@@ -72,3 +72,22 @@
   background: linear-gradient(transparent, var(--bg-primary));
   z-index: 1;
 }
+
+.hero-dots {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 1.25rem;
+}
+
+.hero-dots button {
+  width: 10px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.35);
+  padding: 0;
+}
+
+.hero-dots button.active {
+  width: 24px;
+  background: var(--netflix-red);
+}

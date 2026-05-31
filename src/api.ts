@@ -47,6 +47,12 @@ export function getMovie(id: string, lang: Language): Promise<MovieDetails> {
   return fetchJson<MovieDetails>(`/movie/${id}?lang=${lang}`);
 }
 
+export function refreshStream(id: string, lang: Language) {
+  return fetchJson<Pick<MovieDetails, 'mp4Url' | 'hlsUrl' | 'streamQuality' | 'hasUhd'>>(
+    `/movie/${id}/stream?lang=${lang}`,
+  );
+}
+
 export function proxyStreamUrl(hlsUrl: string): string {
   return `${API_BASE}/stream?url=${encodeURIComponent(hlsUrl)}`;
 }
@@ -73,13 +79,38 @@ export function getMe() {
   return fetchJson<{ user: User }>('/auth/me');
 }
 
-export function getUserLibrary() {
-  return fetchJson<UserLibrary>('/user/library');
+export function forgotPassword(email: string) {
+  return fetchJson<{ ok: boolean; message?: string; resetUrl?: string }>('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
 }
 
-export function saveUserLibrary(library: UserLibrary) {
+export function resetPassword(token: string, password: string) {
+  return fetchJson<{ ok: boolean }>('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, password }),
+  });
+}
+
+export function changePassword(currentPassword: string, newPassword: string) {
+  return fetchJson<{ ok: boolean }>('/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+}
+
+export function getUserLibrary(profileId = 'default') {
+  return fetchJson<UserLibrary>(`/user/library?profileId=${encodeURIComponent(profileId)}`);
+}
+
+export function saveUserLibrary(library: UserLibrary, profileId = 'default') {
   return fetchJson<UserLibrary>('/user/library', {
     method: 'PUT',
-    body: JSON.stringify(library),
+    body: JSON.stringify({ ...library, profileId }),
   });
+}
+
+export function isRateLimitError(message: string) {
+  return /rate limit/i.test(message);
 }

@@ -1,14 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getHome } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import MovieCard from '../components/MovieCard';
+import { SkeletonPage } from '../components/Skeleton';
 import type { Movie } from '../types';
+import '../components/profile.css';
 
 export default function Browse() {
   const { language } = useLanguage();
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [uhdOnly, setUhdOnly] = useState(false);
+  const [yearFilter, setYearFilter] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -44,13 +48,23 @@ export default function Browse() {
     };
   }, [language]);
 
-  if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-spinner" />
-      </div>
-    );
-  }
+  const years = useMemo(
+    () =>
+      [...new Set(movies.map((m) => m.year).filter(Boolean) as string[])].sort(
+        (a, b) => Number(b) - Number(a),
+      ),
+    [movies],
+  );
+
+  const filtered = useMemo(() => {
+    return movies.filter((m) => {
+      if (uhdOnly && !m.uhd) return false;
+      if (yearFilter && m.year !== yearFilter) return false;
+      return true;
+    });
+  }, [movies, uhdOnly, yearFilter]);
+
+  if (loading) return <SkeletonPage />;
 
   if (error) {
     return (
@@ -65,10 +79,30 @@ export default function Browse() {
       <div className="page-content">
         <div className="search-results-header">
           <h1>Browse</h1>
-          <p className="search-results-count">{movies.length} titles</p>
+          <p className="search-results-count">{filtered.length} titles</p>
+        </div>
+        <div className="browse-filters">
+          <button
+            type="button"
+            className={`filter-chip ${uhdOnly ? 'active' : ''}`}
+            onClick={() => setUhdOnly((v) => !v)}
+          >
+            Ultra HD only
+          </button>
+          <select
+            className="filter-select"
+            value={yearFilter}
+            onChange={(e) => setYearFilter(e.target.value)}
+            aria-label="Filter by year"
+          >
+            <option value="">All years</option>
+            {years.map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
         </div>
         <div className="browse-grid">
-          {movies.map((movie) => (
+          {filtered.map((movie) => (
             <MovieCard key={movie.id} movie={movie} />
           ))}
         </div>

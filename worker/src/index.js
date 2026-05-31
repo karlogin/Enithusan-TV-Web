@@ -17,7 +17,7 @@ const movieCache = new Map();
 /** @type {Map<string, Promise<object>>} */
 const movieInflight = new Map();
 
-const MOVIE_CACHE_TTL_MS = 15 * 60 * 1000;
+const MOVIE_CACHE_TTL_MS = 5 * 60 * 1000;
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -264,8 +264,8 @@ async function fetchHtml(url) {
   return html;
 }
 
-/** @param {string} html @param {string} id @param {string} lang @param {string} watchUrl @param {string} cookies */
-async function resolveStreamFromPage(html, id, lang, watchUrl, cookies = '') {
+/** @param {string} html @param {string} id @param {string} lang @param {string} watchUrl @param {string} cookies @param {boolean} preferUhd */
+async function resolveStreamFromPage(html, id, lang, watchUrl, cookies = '', preferUhd = true) {
   const pageIdMatch = html.match(/data-pageid="([^"]+)"/);
   const ejMatch =
     html.match(/id="UIVideoPlayer"[^>]*data-ejpingables="([^"]+)"/) ??
@@ -275,14 +275,13 @@ async function resolveStreamFromPage(html, id, lang, watchUrl, cookies = '') {
   }
 
   const pageId = decodeHtmlEntities(pageIdMatch[1]);
-  const body = new URLSearchParams({
-    xEvent: 'UIVideoPlayer.PingOutcome',
-    xJson: JSON.stringify({ EJOutcomes: ejMatch[1], NativeHLS: false }),
-    arcVersion: '3',
-    appVersion: '59',
-    'gorilla.csrf.Token': pageId,
-  });
+  const hasUhd =
+    /data-uhd="true"/.test(html) ||
+    /id="quality_uhd"/.test(html) ||
+    /class="ultrahd"/.test(html);
 
+  /** @type {string[]} */
+  const qualities = preferUhd && hasUhd ? ['UHD', 'HD'] : ['HD'];
   /** @type {Record<string, string>} */
   const ajaxHeaders = {
     'User-Agent': USER_AGENT,
@@ -292,32 +291,78 @@ async function resolveStreamFromPage(html, id, lang, watchUrl, cookies = '') {
   };
   if (cookies) ajaxHeaders.Cookie = cookies;
 
-  const ajaxRes = await fetch(`${BASE}/ajax/movie/watch/${id}/`, {
-    method: 'POST',
-    headers: ajaxHeaders,
-    body,
-  });
+  let lastError = 'Stream link unavailable';
 
-  if (!ajaxRes.ok) throw new Error(`Stream API error ${ajaxRes.status}`);
-  const json = await ajaxRes.json();
-  const encrypted = json?.Data?.EJLinks;
-  if (!encrypted) throw new Error('Stream link unavailable');
-  const links = decryptEJLinks(encrypted);
-  const hlsUrl = sanitizeStreamUrl(links.HLSLink || '');
-  const mp4Url = sanitizeStreamUrl(links.MP4Link || '');
+  for (const quality of qualities) {
+    const xJson =
+      quality === 'UHD'
+        ? JSON.stringify({ EJOutcomes: ejMatch[1], NativeHLS: false, Quality: 'UHD' })
+        : JSON.stringify({ EJOutcomes: ejMatch[1], NativeHLS: false });
 
-  if (!hlsUrl.includes('.einthusan.io/') && !mp4Url.includes('.einthusan.io/')) {
-    throw new Error('CDN stream link unavailable');
+    const body = new URLSearchParams({
+      xEvent: 'UIVideoPlayer.PingOutcome',
+      xJson,
+      arcVersion: '3',
+      appVersion: '59',
+      'gorilla.csrf.Token': pageId,
+    });
+
+    const ajaxRes = await fetch(`${BASE}/ajax/movie/watch/${id}/`, {
+      method: 'POST',
+      headers: ajaxHeaders,
+      body,
+    });
+
+    if (!ajaxRes.ok) {
+      lastError = `Stream API error ${ajaxRes.status}`;
+      continue;
+    }
+
+    const text = await ajaxRes.text();
+    if (text.includes('Rate Limited') || text.includes('ratelimited')) {
+      lastError = 'Einthusan rate limited. Wait a moment and try again.';
+      await sleep(800);
+      continue;
+    }
+
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      continue;
+    }
+
+    const encrypted = json?.Data?.EJLinks;
+    if (!encrypted) continue;
+
+    const links = decryptEJLinks(encrypted);
+    const hlsUrl = sanitizeStreamUrl(links.HLSLink || '');
+    const mp4Url = sanitizeStreamUrl(links.MP4Link || '');
+
+    if (!hlsUrl.includes('.einthusan.io/') && !mp4Url.includes('.einthusan.io/')) {
+      continue;
+    }
+
+    return {
+      hlsUrl,
+      mp4Url,
+      streamQuality: quality,
+      hasUhd,
+    };
   }
 
-  return { hlsUrl, mp4Url };
+  throw new Error(lastError);
 }
 
 /** @param {string} id @param {string} lang */
-async function getMovieStream(id, lang) {
+async function refreshMovieStream(id, lang) {
+  movieCache.delete(`${id}:${lang}`);
+  movieInflight.delete(`${id}:${lang}`);
   const watchUrl = `${BASE}/movie/watch/${id}/?lang=${lang}`;
-  const { html, cookies } = await fetchWatchPageWithRetry(watchUrl);
-  return resolveStreamFromPage(decodeHtmlEntities(html), id, lang, watchUrl, cookies);
+  const { html: rawHtml, cookies } = await fetchWatchPageWithRetry(watchUrl);
+  const html = decodeHtmlEntities(rawHtml);
+  const stream = await resolveStreamFromPage(html, id, lang, watchUrl, cookies, true);
+  return stream;
 }
 
 /** @param {string} html */
@@ -369,7 +414,14 @@ async function getMovieDetailsImpl(id, lang) {
   const contentTitle = html.match(/data-content-title="([^"]+)"/);
   if (contentTitle) title = contentTitle[1];
 
-  const { hlsUrl, mp4Url } = await resolveStreamFromPage(html, id, lang, watchUrl, cookies);
+  const { hlsUrl, mp4Url, streamQuality, hasUhd } = await resolveStreamFromPage(
+    html,
+    id,
+    lang,
+    watchUrl,
+    cookies,
+    true,
+  );
   const extras = parseMovieExtras(html);
   const year = html.match(/class="info"[^>]*><p>(\d{4})/)?.[1] ?? null;
 
@@ -382,6 +434,8 @@ async function getMovieDetailsImpl(id, lang) {
     uhd,
     hlsUrl,
     mp4Url,
+    streamQuality,
+    hasUhd,
     year,
     ...extras,
     imdbSearchUrl: `https://www.imdb.com/find/?q=${encodeURIComponent(title + (year ? ` ${year}` : ''))}`,
@@ -525,6 +579,17 @@ export default {
         const html = await fetchHtml(searchUrl);
         const results = parseSearchResults(html, lang);
         return Response.json(results, { headers: { ...corsHeaders, 'Cache-Control': 'public, max-age=120' } });
+      }
+
+      const streamMatch = path.match(/^\/(?:api\/)?movie\/([^/]+)\/stream$/);
+      if (streamMatch) {
+        const id = streamMatch[1];
+        const lang = url.searchParams.get('lang') ?? 'tamil';
+        if (!VALID_LANGS.has(lang)) {
+          return Response.json({ error: 'Invalid language' }, { status: 400, headers: corsHeaders });
+        }
+        const stream = await refreshMovieStream(id, lang);
+        return Response.json(stream, { headers: { ...corsHeaders, 'Cache-Control': 'no-store' } });
       }
 
       const movieMatch = path.match(/^\/(?:api\/)?movie\/([^/]+)$/);
