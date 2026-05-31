@@ -4,11 +4,12 @@ import { proxyStreamUrl } from '../api';
 import './watch.css';
 
 interface VideoPlayerProps {
-  hlsUrl: string;
+  mp4Url?: string;
+  hlsUrl?: string;
   poster?: string;
 }
 
-export default function VideoPlayer({ hlsUrl, poster }: VideoPlayerProps) {
+export default function VideoPlayer({ mp4Url, hlsUrl, poster }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [loading, setLoading] = useState(true);
@@ -18,7 +19,6 @@ export default function VideoPlayer({ hlsUrl, poster }: VideoPlayerProps) {
     const video = videoRef.current;
     if (!video) return;
 
-    const src = proxyStreamUrl(hlsUrl);
     setLoading(true);
     setError(null);
 
@@ -26,6 +26,37 @@ export default function VideoPlayer({ hlsUrl, poster }: VideoPlayerProps) {
       hlsRef.current.destroy();
       hlsRef.current = null;
     }
+
+    video.removeAttribute('src');
+    video.load();
+
+    if (mp4Url) {
+      const onReady = () => {
+        setLoading(false);
+        video.play().catch(() => undefined);
+      };
+      const onError = () => {
+        setError('Unable to play this stream. Try going back and pressing play again.');
+        setLoading(false);
+      };
+
+      video.addEventListener('loadedmetadata', onReady, { once: true });
+      video.addEventListener('error', onError, { once: true });
+      video.src = mp4Url;
+
+      return () => {
+        video.removeEventListener('loadedmetadata', onReady);
+        video.removeEventListener('error', onError);
+      };
+    }
+
+    if (!hlsUrl) {
+      setError('Stream unavailable for this title.');
+      setLoading(false);
+      return;
+    }
+
+    const src = proxyStreamUrl(hlsUrl);
 
     if (Hls.isSupported()) {
       const hls = new Hls({
@@ -64,7 +95,7 @@ export default function VideoPlayer({ hlsUrl, poster }: VideoPlayerProps) {
         hlsRef.current = null;
       }
     };
-  }, [hlsUrl]);
+  }, [mp4Url, hlsUrl]);
 
   if (error) {
     return (

@@ -301,13 +301,14 @@ async function resolveStreamFromPage(html, id, lang, watchUrl, cookies = '') {
   const encrypted = json?.Data?.EJLinks;
   if (!encrypted) throw new Error('Stream link unavailable');
   const links = decryptEJLinks(encrypted);
-  const hlsUrl = sanitizeStreamUrl(links.HLSLink || links.MP4Link);
+  const hlsUrl = sanitizeStreamUrl(links.HLSLink || '');
+  const mp4Url = sanitizeStreamUrl(links.MP4Link || '');
 
-  if (!hlsUrl.includes('.einthusan.io/')) {
+  if (!hlsUrl.includes('.einthusan.io/') && !mp4Url.includes('.einthusan.io/')) {
     throw new Error('CDN stream link unavailable');
   }
 
-  return hlsUrl;
+  return { hlsUrl, mp4Url };
 }
 
 /** @param {string} id @param {string} lang */
@@ -337,7 +338,7 @@ async function getMovieDetailsImpl(id, lang) {
   const contentTitle = html.match(/data-content-title="([^"]+)"/);
   if (contentTitle) title = contentTitle[1];
 
-  const hlsUrl = await resolveStreamFromPage(html, id, lang, watchUrl, cookies);
+  const { hlsUrl, mp4Url } = await resolveStreamFromPage(html, id, lang, watchUrl, cookies);
 
   return {
     id,
@@ -347,6 +348,7 @@ async function getMovieDetailsImpl(id, lang) {
     description: descMatch?.[1]?.trim() ?? '',
     uhd,
     hlsUrl,
+    mp4Url,
   };
 }
 

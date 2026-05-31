@@ -80,8 +80,12 @@ export default function Watch() {
           </svg>
           Back
         </Link>
-        {movie.hlsUrl ? (
-          <VideoPlayer hlsUrl={movie.hlsUrl} poster={movie.poster} />
+        {movie.mp4Url || movie.hlsUrl ? (
+          <VideoPlayer
+            mp4Url={movie.mp4Url}
+            hlsUrl={movie.hlsUrl}
+            poster={movie.poster}
+          />
         ) : (
           <div className="player-error">
             <p>Stream unavailable for this title.</p>

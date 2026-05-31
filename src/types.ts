@@ -12,6 +12,7 @@ export interface Movie {
 export interface MovieDetails extends Movie {
   description?: string;
   hlsUrl?: string;
+  mp4Url?: string;
 }
 
 export interface HomeData {
