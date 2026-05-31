@@ -31,6 +31,7 @@ jobs:
         env:
           VITE_API_BASE: ${{ vars.VITE_API_BASE }}
           VITE_BASE_PATH: /
+          VITE_CF_BEACON_TOKEN: ${{ vars.VITE_CF_BEACON_TOKEN }}
         run: npm run build
 
       - run: cp dist/index.html dist/404.html

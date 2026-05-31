@@ -2,10 +2,18 @@ name = "einthusan-tv-api"
 main = "src/index.js"
 compatibility_date = "2024-09-23"
 
+[vars]
+APP_URL = "https://einthusan.mainframe.website"
+MAIL_FROM = "noreply@mainframe.website"
+
 [[kv_namespaces]]
 binding = "USER_DATA"
 id = "3eb8029c035a47998fb25d97d161b837"
 preview_id = "30acedfad88c4661a93415a3873eda27"
+
+# Cloudflare Email Service — onboard mainframe.website in dashboard first
+[[send_email]]
+name = "EMAIL"
 
 [dev]
 port = 8787

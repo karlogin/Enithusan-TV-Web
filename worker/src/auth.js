@@ -155,20 +155,18 @@ export async function handleAuth(request, env, corsHeaders) {
       await kv(env).put(`reset:${token}`, userId, { expirationTtl: 3600 });
       const appUrl = env.APP_URL || 'https://einthusan.mainframe.website';
       const resetUrl = `${appUrl}/reset-password?token=${token}`;
-      if (env.MAIL_FROM) {
+      const mailFrom = env.MAIL_FROM || 'noreply@mainframe.website';
+      if (env.EMAIL) {
         try {
-          await fetch('https://api.mailchannels.net/tx/v1/send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              personalizations: [{ to: [{ email }] }],
-              from: { email: env.MAIL_FROM, name: 'Einthusan TV' },
-              subject: 'Reset your password',
-              content: [{ type: 'text/plain', value: `Reset your password: ${resetUrl}` }],
-            }),
+          await env.EMAIL.send({
+            to: email,
+            from: mailFrom,
+            subject: 'Reset your Einthusan TV password',
+            text: `Click to reset your password (valid 1 hour):\n\n${resetUrl}\n\nIf you did not request this, ignore this email.`,
+            html: `<p>Click to reset your password (valid 1 hour):</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>If you did not request this, ignore this email.</p>`,
           });
         } catch {
-          /* ignore */
+          /* ignore — domain may not be onboarded yet */
         }
       } else if (env.DEV_SHOW_RESET_LINK === 'true') {
         return json({ ok: true, resetUrl }, 200, corsHeaders);
