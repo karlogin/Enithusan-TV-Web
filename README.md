@@ -49,31 +49,51 @@ Open `http://localhost:5173`. Vite proxies `/api/*` to the worker automatically.
 
 ## Deploy
 
-### Step 1 — Deploy the Cloudflare Worker (free)
+### Live URLs
 
-1. Create a [Cloudflare](https://cloudflare.com) account
-2. Install Wrangler: `npm install -g wrangler`
-3. Log in: `wrangler login`
-4. Deploy:
+| Component | URL |
+|-----------|-----|
+| **Frontend (GitHub Pages)** | https://karlogin.github.io/Enithusan-TV-Web/ |
+| **API (Cloudflare Worker)** | _Deploy below — required for movies & playback_ |
+
+### Step 1 — Deploy the Cloudflare Worker (required)
+
+The frontend needs a live API. Choose **one** method:
+
+#### Option A: Deploy from your machine (quickest)
 
 ```bash
 cd worker
-npm run deploy
+npm install
+npx wrangler login          # opens browser — approve Cloudflare access
+npx wrangler deploy
 ```
 
-Note the worker URL, e.g. `https://einthusan-tv-api.your-name.workers.dev`.
+Copy the worker URL shown (e.g. `https://einthusan-tv-api.<your-subdomain>.workers.dev`).
 
-### Step 2 — Deploy to GitHub Pages
+#### Option B: Deploy via GitHub Actions
 
-1. Push this repo to [github.com/karlogin/Enithusan-TV-Web](https://github.com/karlogin/Enithusan-TV-Web)
-2. In GitHub → **Settings → Pages**, set source to **GitHub Actions**
-3. In **Settings → Secrets and variables → Actions → Variables**, add:
-   - `VITE_API_BASE` = your worker URL (e.g. `https://einthusan-tv-api.your-name.workers.dev/api`)
-4. Push to `main` — the workflow builds and deploys automatically
+1. Create a [Cloudflare API token](https://dash.cloudflare.com/profile/api-tokens) with **Edit Cloudflare Workers** permission
+2. In GitHub → **Enithusan-TV-Web** → **Settings → Secrets and variables → Actions**, add:
+   - `CLOUDFLARE_API_TOKEN` — your token
+   - `CLOUDFLARE_ACCOUNT_ID` — from Cloudflare dashboard → Workers overview (right sidebar)
+3. Run **Actions → Deploy Cloudflare Worker → Run workflow**
 
-Your site will be live at:
+### Step 2 — Connect frontend to the API
 
-`https://karlogin.github.io/Enithusan-TV-Web/`
+In GitHub → **Settings → Secrets and variables → Actions → Variables**, add:
+
+| Variable | Example value |
+|----------|---------------|
+| `VITE_API_BASE` | `https://einthusan-tv-api.your-subdomain.workers.dev/api` |
+
+Then re-run **Actions → Deploy to GitHub Pages → Run workflow** (or push any commit to `main`).
+
+### Step 3 — Verify
+
+Open https://karlogin.github.io/Enithusan-TV-Web/ — you should see movie rows load and playback work.
+
+> **Note:** The repo is public (required for free GitHub Pages). To use a private repo, upgrade to GitHub Pro or host the frontend on Cloudflare Pages instead.
 
 ## Environment variables
 
