@@ -30,7 +30,7 @@ jobs:
       - name: Build
         env:
           VITE_API_BASE: ${{ vars.VITE_API_BASE }}
-          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_BASE_PATH: /
         run: npm run build
 
       - run: cp dist/index.html dist/404.html

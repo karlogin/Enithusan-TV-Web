@@ -53,7 +53,8 @@ Open `http://localhost:5173`. Vite proxies `/api/*` to the worker automatically.
 
 | Component | URL |
 |-----------|-----|
-| **Frontend (GitHub Pages)** | https://karlogin.github.io/Enithusan-TV-Web/ |
+| **Frontend (custom domain)** | https://einthusan.mainframe.website/ |
+| **Frontend (GitHub Pages fallback)** | https://karlogin.github.io/Enithusan-TV-Web/ |
 | **API (Cloudflare Worker)** | https://einthusan-tv-api.einthusan-karthik.workers.dev/api |
 
 ### Step 1 — Deploy the Cloudflare Worker (required)
@@ -104,7 +105,17 @@ Then re-run **Actions → Deploy to GitHub Pages → Run workflow** (or push any
 
 ### Step 3 — Verify
 
-Open https://karlogin.github.io/Enithusan-TV-Web/ — you should see movie rows load and playback work.
+Open https://einthusan.mainframe.website/ — you should see movie rows load and playback work.
+
+### Custom domain (Cloudflare DNS)
+
+The site is configured for **einthusan.mainframe.website** on your `mainframe.website` zone. In [Cloudflare DNS](https://dash.cloudflare.com/86d1fcd3848963e4e830d89aec3e1354/mainframe.website/dns):
+
+| Type | Name | Target | Proxy |
+|------|------|--------|-------|
+| CNAME | `einthusan` | `karlogin.github.io` | DNS only (grey cloud) |
+
+GitHub provisions HTTPS once DNS resolves. SSL can take up to 24 hours; usually a few minutes.
 
 > **Note:** The repo is public (required for free GitHub Pages). To use a private repo, upgrade to GitHub Pro or host the frontend on Cloudflare Pages instead.
 
