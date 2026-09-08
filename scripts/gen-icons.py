@@ -89,17 +89,20 @@ def save_flat(img, path):
 
 
 if __name__ == '__main__':
+    # web.dev's PWA icon guidance: avoid transparent PNGs, since some OS
+    # install surfaces fill transparent areas unpredictably (white/black).
+    # Flatten onto the manifest's background_color (#000000) instead.
     icon_192 = draw_mark(192)
-    icon_192.save(os.path.join(OUT_DIR, 'icon-192.png'))
+    save_flat(icon_192, os.path.join(OUT_DIR, 'icon-192.png'))
 
     icon_512 = draw_mark(512)
-    icon_512.save(os.path.join(OUT_DIR, 'icon-512.png'))
+    save_flat(icon_512, os.path.join(OUT_DIR, 'icon-512.png'))
 
     # Maskable variant needs extra safe-zone padding so OS masks (circle/squircle)
     # don't clip the mark -- reuse icon-512.png's slot in the manifest but make
     # the artwork itself safe by baking in the padding.
     icon_512_maskable = draw_mark(512, padding_frac=0.12)
-    icon_512_maskable.save(os.path.join(OUT_DIR, 'icon-512-maskable.png'))
+    save_flat(icon_512_maskable, os.path.join(OUT_DIR, 'icon-512-maskable.png'))
 
     # iOS applies its own corner rounding to apple-touch-icon, so fill the
     # square edge-to-edge (margin_frac=0) -- otherwise the un-rounded gradient
