@@ -235,9 +235,21 @@ export default function VideoPlayer({
 
   // ── Fullscreen change ────────────────────────────────────────────────────────
   useEffect(() => {
+    const video = videoRef.current;
     const onFSChange = () => setIsFullscreen(!!document.fullscreenElement);
+    // iOS Safari doesn't support the standard Fullscreen API on arbitrary
+    // elements, only its own non-standard fullscreen mode on <video> itself,
+    // which fires these events instead of "fullscreenchange".
+    const onIosEnter = () => setIsFullscreen(true);
+    const onIosExit = () => setIsFullscreen(false);
     document.addEventListener('fullscreenchange', onFSChange);
-    return () => document.removeEventListener('fullscreenchange', onFSChange);
+    video?.addEventListener('webkitbeginfullscreen', onIosEnter);
+    video?.addEventListener('webkitendfullscreen', onIosExit);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFSChange);
+      video?.removeEventListener('webkitbeginfullscreen', onIosEnter);
+      video?.removeEventListener('webkitendfullscreen', onIosExit);
+    };
   }, []);
 
   // ── Auto-hide controls ───────────────────────────────────────────────────────
@@ -292,7 +304,26 @@ export default function VideoPlayer({
 
   const toggleFullscreen = useCallback(() => {
     const container = containerRef.current;
+    const video = videoRef.current;
     if (!container) return;
+
+    const videoIos = video as HTMLVideoElement & {
+      webkitEnterFullscreen?: () => void;
+      webkitExitFullscreen?: () => void;
+      webkitDisplayingFullscreen?: boolean;
+    };
+
+    // iOS Safari has no Fullscreen API support for a container <div> -- only
+    // the <video> element itself can go fullscreen, via this non-standard API.
+    if (!container.requestFullscreen && videoIos.webkitEnterFullscreen) {
+      if (videoIos.webkitDisplayingFullscreen) {
+        videoIos.webkitExitFullscreen?.();
+      } else {
+        videoIos.webkitEnterFullscreen();
+      }
+      return;
+    }
+
     if (!document.fullscreenElement) {
       container.requestFullscreen().catch(() => undefined);
     } else {
