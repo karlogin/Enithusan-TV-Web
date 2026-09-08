@@ -263,7 +263,7 @@
   position: absolute;
   inset: 0;
   height: 100%;
-  background: #e50914;
+  background: var(--brand-primary);
   border-radius: 2px;
   pointer-events: none;
 }

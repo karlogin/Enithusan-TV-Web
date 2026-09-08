@@ -1,3 +1,4 @@
+import CustomSelect from './CustomSelect';
 import { useProfile } from '../context/ProfileContext';
 import './profile.css';
 
@@ -8,22 +9,12 @@ export default function ProfileSwitcher() {
 
   return (
     <div className="profile-switcher">
-      <label htmlFor="profile-select" className="sr-only">
-        Profile
-      </label>
-      <select
-        id="profile-select"
-        className="profile-select"
+      <CustomSelect
         value={activeProfile.id}
-        onChange={(e) => setActiveProfile(e.target.value)}
-        style={{ borderColor: activeProfile.color }}
-      >
-        {profiles.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.name}{p.isKids ? ' (Kids)' : ''}
-          </option>
-        ))}
-      </select>
+        onChange={setActiveProfile}
+        options={profiles.map((p) => ({ value: p.id, label: `${p.name}${p.isKids ? ' (Kids)' : ''}` }))}
+        ariaLabel="Profile"
+      />
     </div>
   );
 }

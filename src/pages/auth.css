@@ -4,17 +4,19 @@
   place-items: center;
   padding: 6rem 1.5rem 2rem;
   background:
-    radial-gradient(ellipse at top, rgba(229, 9, 20, 0.12), transparent 55%),
+    radial-gradient(ellipse at top, rgba(10, 132, 255, 0.14), transparent 55%),
     var(--bg-primary);
 }
 
 .auth-card {
   width: min(420px, 100%);
-  background: rgba(0, 0, 0, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  background: var(--glass-surface);
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
   padding: 2.5rem 2rem;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-elevated);
 }
 
 .auth-card h1 {
@@ -43,18 +45,18 @@
 }
 
 .auth-form input {
-  background: #333;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
   padding: 0.75rem 0.85rem;
   font-size: 1rem;
 }
 
 .auth-form input:focus {
   outline: none;
-  border-color: #888;
-  background: #454545;
+  border-color: var(--brand-primary);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .auth-error {
