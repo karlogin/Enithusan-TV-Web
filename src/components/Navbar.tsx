@@ -19,6 +19,7 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useKeyboardShortcuts(() => {
     setSearchOpen(true);
@@ -124,7 +125,57 @@ export default function Navbar() {
             )}
           </div>
         )}
+
+        <button
+          type="button"
+          className="navbar-burger"
+          aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={mobileMenuOpen}
+          onClick={() => setMobileMenuOpen((v) => !v)}
+        >
+          {mobileMenuOpen ? (
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 19 5 17.6 10.6 12 5 6.4 6.4 5 12 10.6 17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4Z" /></svg>
+          ) : (
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z" /></svg>
+          )}
+        </button>
       </div>
+
+      {mobileMenuOpen && (
+        <div className="navbar-mobile-menu">
+          <NavLink to="/" end onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => (isActive ? 'active' : '')}>Home</NavLink>
+          <NavLink to="/browse" onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => (isActive ? 'active' : '')}>Browse</NavLink>
+          <NavLink to="/my-list" onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => (isActive ? 'active' : '')}>My List</NavLink>
+
+          <div className="navbar-mobile-row">
+            <select
+              className="language-select"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as typeof language)}
+              aria-label="Language filter"
+            >
+              {LANGUAGES.map(({ value, label }) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+            <button type="button" className="theme-toggle" onClick={cycleTheme} aria-label="Toggle theme">
+              {theme === 'dark' ? '☀ Light' : theme === 'light' ? '🌙 System' : '◐ Dark'}
+            </button>
+          </div>
+
+          {!loading && (
+            user ? (
+              <>
+                <NavLink to="/account" onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => (isActive ? 'active' : '')}>Account</NavLink>
+                <NavLink to="/about" onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => (isActive ? 'active' : '')}>About</NavLink>
+                <button type="button" className="navbar-mobile-signout" onClick={async () => { await logout(); setMobileMenuOpen(false); }}>Sign Out</button>
+              </>
+            ) : (
+              <Link to="/login" className="nav-signin navbar-mobile-signin" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
+            )
+          )}
+        </div>
+      )}
     </header>
   );
 }

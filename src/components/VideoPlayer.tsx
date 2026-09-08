@@ -40,6 +40,7 @@ export default function VideoPlayer({
   const scrubbing = useRef(false);
   const flashTimer = useRef<number | null>(null);
   const refreshAttempt = useRef(0);
+  const startTimeRef = useRef(startTime);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +62,9 @@ export default function VideoPlayer({
   useEffect(() => {
     setSrcMp4(mp4Url);
     setSrcHls(hlsUrl);
+    startTimeRef.current = startTime;
     refreshAttempt.current = 0;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mp4Url, hlsUrl]);
 
   // ── Stream loading (unchanged logic) ────────────────────────────────────────
@@ -81,8 +84,9 @@ export default function VideoPlayer({
     video.load();
 
     const seekToStart = () => {
-      if (startTime > 0 && Number.isFinite(video.duration)) {
-        video.currentTime = Math.min(startTime, video.duration - 5);
+      const initialTime = startTimeRef.current;
+      if (initialTime > 0 && Number.isFinite(video.duration)) {
+        video.currentTime = Math.min(initialTime, video.duration - 5);
       }
     };
 
@@ -170,7 +174,7 @@ export default function VideoPlayer({
         hlsRef.current = null;
       }
     };
-  }, [srcMp4, srcHls, startTime, onStreamError]);
+  }, [srcMp4, srcHls, onStreamError]);
 
   // ── Progress reporting ───────────────────────────────────────────────────────
   useEffect(() => {
