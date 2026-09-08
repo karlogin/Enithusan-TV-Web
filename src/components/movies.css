@@ -304,3 +304,20 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* Touch devices have no hover: keep title/remove affordances visible instead of hidden forever */
+@media (hover: none) {
+  .movie-card-overlay,
+  .continue-overlay {
+    opacity: 1;
+    background: linear-gradient(transparent 55%, rgba(0, 0, 0, 0.9));
+  }
+
+  .continue-remove {
+    opacity: 1;
+  }
+
+  .movie-card:active {
+    transform: scale(0.97);
+  }
+}
+
