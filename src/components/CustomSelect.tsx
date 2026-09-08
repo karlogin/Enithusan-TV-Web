@@ -25,7 +25,15 @@ export default function CustomSelect({ value, onChange, options, ariaLabel, clas
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') { setOpen(false); return; }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const idx = options.findIndex((o) => o.value === value);
+        const next = e.key === 'ArrowDown'
+          ? Math.min(idx + 1, options.length - 1)
+          : Math.max(idx - 1, 0);
+        onChange(options[next].value);
+      }
     };
     document.addEventListener('mousedown', onClick);
     document.addEventListener('keydown', onKey);
@@ -33,7 +41,7 @@ export default function CustomSelect({ value, onChange, options, ariaLabel, clas
       document.removeEventListener('mousedown', onClick);
       document.removeEventListener('keydown', onKey);
     };
-  }, [open]);
+  }, [open, options, value, onChange]);
 
   return (
     <div className={`custom-select ${className ?? ''}`} ref={ref}>

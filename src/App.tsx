@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ProfileProvider } from './context/ProfileContext';
 import { UserLibraryProvider } from './context/UserLibraryContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
 import TabBar from './components/TabBar';
 import Home from './pages/Home';
@@ -35,6 +36,7 @@ export default function App() {
       <AuthProvider>
         <ProfileProvider>
           <UserLibraryProvider>
+            <ErrorBoundary>
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -58,6 +60,7 @@ export default function App() {
                 }
               />
             </Routes>
+            </ErrorBoundary>
           </UserLibraryProvider>
         </ProfileProvider>
       </AuthProvider>

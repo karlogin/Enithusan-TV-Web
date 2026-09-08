@@ -2,6 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { getMe, loginUser, logoutUser, registerUser, setAuthToken } from '../api';
 import type { User } from '../types';
 
+const TOKEN_KEY = 'einthusan-auth-token';
+
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
@@ -17,6 +19,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!localStorage.getItem(TOKEN_KEY)) {
+      setLoading(false);
+      return;
+    }
     getMe()
       .then(({ user: u }) => setUser(u))
       .catch(() => setUser(null))

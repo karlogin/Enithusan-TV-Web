@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { getMovie, refreshStream } from '../api';
 import CastHint from '../components/CastHint';
 import MyListButton from '../components/MyListButton';
@@ -9,16 +9,21 @@ import { useUserLibrary } from '../context/UserLibraryContext';
 import { LANGUAGE_LABELS, type Language, type MovieDetails } from '../types';
 import '../components/watch.css';
 
+const VALID_LANGS = new Set<Language>(['tamil', 'hindi', 'malayalam']);
+
 export default function Watch() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { language: globalLang } = useLanguage();
   const { continueWatching, updateProgress } = useUserLibrary();
-  const lang = (searchParams.get('lang') as Language | null) ?? globalLang;
+  const rawLang = searchParams.get('lang') as Language | null;
+  const lang = rawLang && VALID_LANGS.has(rawLang) ? rawLang : globalLang;
 
   const [movie, setMovie] = useState<MovieDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const saved = continueWatching.find((m) => m.id === id);
   const startTime = saved?.progress ?? 0;
@@ -44,7 +49,7 @@ export default function Watch() {
     return () => {
       cancelled = true;
     };
-  }, [id, lang]);
+  }, [id, lang, retryCount]);
 
   const onStreamError = useCallback(async () => {
     if (!id) return null;
@@ -74,12 +79,12 @@ export default function Watch() {
           Einthusan may rate-limit rapid requests. Wait a few seconds and try again.
         </p>
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-          <button type="button" className="btn btn-secondary" onClick={() => window.location.reload()}>
+          <button type="button" className="btn btn-secondary" onClick={() => { setMovie(null); setError(null); setRetryCount((c) => c + 1); }}>
             Retry
           </button>
-          <Link to="/" className="btn btn-secondary">
-            Back to Home
-          </Link>
+          <button type="button" className="btn btn-secondary" onClick={() => navigate(-1)}>
+            Go Back
+          </button>
         </div>
       </div>
     );
@@ -88,12 +93,12 @@ export default function Watch() {
   return (
     <div className="watch-page">
       <div className="watch-player-wrap">
-        <Link to="/" className="watch-back">
+        <button type="button" className="watch-back" onClick={() => navigate(-1)}>
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
           </svg>
           Back
-        </Link>
+        </button>
         {movie.mp4Url || movie.hlsUrl ? (
           <VideoPlayer
             mp4Url={movie.mp4Url}

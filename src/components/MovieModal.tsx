@@ -1,10 +1,32 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getMovie } from '../api';
 import MyListButton from './MyListButton';
 import type { Movie, MovieDetails } from '../types';
 import { LANGUAGE_LABELS } from '../types';
 import './modal.css';
+
+const FOCUSABLE = 'a[href], button:not([disabled]), input, textarea, select, [tabindex]:not([tabindex="-1"])';
+
+function trapFocus(e: KeyboardEvent, panel: HTMLElement) {
+  const focusable = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE));
+  if (focusable.length === 0) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (e.key === 'Tab') {
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  }
+}
 
 interface MovieModalProps {
   movie: Movie;
@@ -14,6 +36,7 @@ interface MovieModalProps {
 export default function MovieModal({ movie, onClose }: MovieModalProps) {
   const [details, setDetails] = useState<MovieDetails | null>(null);
   const [loading, setLoading] = useState(true);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,11 +57,15 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
   }, [movie]);
 
   useEffect(() => {
+    const panel = panelRef.current;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') { onClose(); return; }
+      if (panel) trapFocus(e, panel);
     };
     document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', onKey);
+    const firstFocusable = panel?.querySelector<HTMLElement>(FOCUSABLE);
+    firstFocusable?.focus();
     return () => {
       document.body.style.overflow = '';
       window.removeEventListener('keydown', onKey);
@@ -50,7 +77,7 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
   return (
     <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <button type="button" className="modal-backdrop" aria-label="Close" onClick={onClose} />
-      <div className="modal-panel">
+      <div className="modal-panel" ref={panelRef}>
         <button type="button" className="modal-close" aria-label="Close" onClick={onClose}>
           ×
         </button>

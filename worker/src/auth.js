@@ -1,5 +1,22 @@
 const SESSION_TTL_SEC = 60 * 60 * 24 * 30; // 30 days
 
+/** @type {Map<string, { count: number, resetAt: number }>} */
+const authRateMap = new Map();
+const AUTH_RATE_WINDOW_MS = 60 * 1000;
+const AUTH_RATE_LIMIT = 10;
+
+/** @param {string} ip @returns {boolean} true if allowed */
+function authRateAllow(ip) {
+  const now = Date.now();
+  const entry = authRateMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    authRateMap.set(ip, { count: 1, resetAt: now + AUTH_RATE_WINDOW_MS });
+    return true;
+  }
+  entry.count += 1;
+  return entry.count <= AUTH_RATE_LIMIT;
+}
+
 /** @type {Map<string, string>} */
 const devKv = new Map();
 
@@ -90,6 +107,10 @@ export async function handleAuth(request, env, corsHeaders) {
   const path = url.pathname.replace(/\/$/, '');
 
   if (path === '/api/auth/register' && request.method === 'POST') {
+    const clientIp = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown';
+    if (!authRateAllow(clientIp)) {
+      return json({ error: 'Too many requests. Try again in a minute.' }, 429, corsHeaders);
+    }
     const body = await request.json();
     const email = String(body.email ?? '')
       .trim()
@@ -97,7 +118,7 @@ export async function handleAuth(request, env, corsHeaders) {
     const password = String(body.password ?? '');
     const name = String(body.name ?? '').trim() || email.split('@')[0];
 
-    if (!email.includes('@') || password.length < 6) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || password.length < 6) {
       return json({ error: 'Valid email and password (6+ chars) required' }, 400, corsHeaders);
     }
 
@@ -121,6 +142,10 @@ export async function handleAuth(request, env, corsHeaders) {
   }
 
   if (path === '/api/auth/login' && request.method === 'POST') {
+    const clientIp = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown';
+    if (!authRateAllow(clientIp)) {
+      return json({ error: 'Too many requests. Try again in a minute.' }, 429, corsHeaders);
+    }
     const body = await request.json();
     const email = String(body.email ?? '')
       .trim()

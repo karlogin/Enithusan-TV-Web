@@ -15,16 +15,28 @@ export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
 
   useEffect(() => {
     if (movies.length <= 1) return;
-    const t = window.setInterval(() => {
-      setIndex((i) => (i + 1) % movies.length);
-    }, 8000);
-    return () => clearInterval(t);
+    let t: number | null = null;
+
+    const start = () => {
+      t = window.setInterval(() => {
+        setIndex((i) => (i + 1) % movies.length);
+      }, 8000);
+    };
+    const stop = () => { if (t !== null) { clearInterval(t); t = null; } };
+    const onVisibility = () => { document.hidden ? stop() : start(); };
+
+    start();
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      stop();
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, [movies.length]);
 
   if (!movie) return null;
 
   return (
-    <section className="hero">
+    <section className="hero" aria-label="Featured titles" aria-live="polite" aria-atomic="true">
       <div
         className="hero-backdrop hero-backdrop--fill"
         style={{ backgroundImage: movie.poster ? `url(${movie.poster})` : undefined }}

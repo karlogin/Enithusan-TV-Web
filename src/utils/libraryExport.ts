@@ -9,16 +9,3 @@ export function exportLibrary(data: UserLibrary & { exportedAt: number }) {
   a.click();
   URL.revokeObjectURL(url);
 }
-
-export function importLibrary(json: string) {
-  const data = JSON.parse(json) as UserLibrary;
-  if (!Array.isArray(data.myList) || !Array.isArray(data.continueWatching)) {
-    throw new Error('Invalid library file');
-  }
-  const key = Object.keys(localStorage).find((k) => k.startsWith('einthusan-library'));
-  if (key) {
-    localStorage.setItem(key, JSON.stringify(data));
-  } else {
-    localStorage.setItem('einthusan-library:default', JSON.stringify(data));
-  }
-}
