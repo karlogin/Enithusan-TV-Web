@@ -1,6 +1,6 @@
 {
   "name": "Einthusan TV",
-  "short_name": "Einthusan",
+  "short_name": "Einthusan TV",
   "description": "Stream Tamil, Hindi, and Malayalam movies",
   "start_url": "/",
   "scope": "/",
@@ -23,7 +23,7 @@
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "/icons/icon-512-maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

@@ -1,4 +1,4 @@
-const CACHE = 'einthusan-shell-v1';
+const CACHE = 'einthusan-shell-v2';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
