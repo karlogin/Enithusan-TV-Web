@@ -6,10 +6,24 @@ import { handleAuth, handleUserLibrary } from './auth.js';
 const BASE = 'https://einthusan.tv';
 const VALID_LANGS = new Set(['tamil', 'hindi', 'malayalam']);
 
-const corsHeaders = {
+function makeCorsHeaders(env, request) {
+  const allowed = env?.APP_URL || 'https://einthusan.mainframe.website';
+  const origin = request?.headers?.get('Origin') ?? '';
+  const allowedOrigins = [allowed, 'https://karlogin.github.io'];
+  const resolvedOrigin = allowedOrigins.includes(origin) ? origin : allowed;
+  return {
+    'Access-Control-Allow-Origin': resolvedOrigin,
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Vary': 'Origin',
+  };
+}
+
+// Keep a backwards-compat alias for stream proxy where wildcard is still needed
+const streamCorsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
 };
 
 /** @type {Map<string, { data: object, expires: number }>} */
@@ -46,6 +60,36 @@ function parseBrowseMovies(html, lang) {
   /** @type {Map<string, object>} */
   const movies = new Map();
 
+  // Extract all poster src values in one pass: map "id:lang" -> poster url
+  /** @type {Map<string, string>} */
+  const posterMap = new Map();
+  const posterRe =
+    /id="movie_cover_link"[^>]*href="\/movie\/watch\/([^/]+)\/\?lang=([^"]+)"[^>]*><img src="([^"]+)"/g;
+  let pm;
+  while ((pm = posterRe.exec(html)) !== null) {
+    const key = `${pm[1]}:${pm[2]}`;
+    if (!posterMap.has(key)) posterMap.set(key, pm[3]);
+  }
+
+  // Extract all year values in one pass: map "id:lang" -> year
+  /** @type {Map<string, string>} */
+  const yearMap = new Map();
+  const yearRe =
+    /watch\/([^/]+)\/\?lang=([^"]+)"[^>]*>[^<]*<div class="info"><p>(\d{4})/g;
+  let ym;
+  while ((ym = yearRe.exec(html)) !== null) {
+    const key = `${ym[1]}:${ym[2]}`;
+    if (!yearMap.has(key)) yearMap.set(key, ym[3]);
+  }
+
+  // Extract all UHD flags in one pass: set of "id:lang"
+  const uhdSet = new Set();
+  const uhdRe = /watch\/([^/]+)\/\?lang=([^"]+)"[^>]*data-uhd="true"/g;
+  let um;
+  while ((um = uhdRe.exec(html)) !== null) {
+    uhdSet.add(`${um[1]}:${um[2]}`);
+  }
+
   const titleRe =
     /<a class="title" href="\/movie\/watch\/([^/]+)\/\?lang=([^"]+)"><h2>([^<]+)<\/h2><\/a>/g;
   let m;
@@ -53,30 +97,17 @@ function parseBrowseMovies(html, lang) {
     const [, id, movieLang, title] = m;
     if (movies.has(id)) continue;
 
-    const posterRe = new RegExp(
-      `id="movie_cover_link"[^>]*href="/movie/watch/${escapeRegExp(id)}/\\?lang=${escapeRegExp(movieLang)}"[^>]*><img src="([^"]+)"`,
-    );
-    const posterMatch = html.match(posterRe);
-    let poster = posterMatch?.[1] ?? '';
+    const key = `${id}:${movieLang}`;
+    let poster = posterMap.get(key) ?? '';
     if (poster && !poster.startsWith('http')) poster = `https:${poster}`;
-
-    const yearRe = new RegExp(
-      `watch/${escapeRegExp(id)}/\\?lang=${escapeRegExp(movieLang)}".*?<div class="info"><p>(\\d{4})`,
-      's',
-    );
-    const yearMatch = html.match(yearRe);
-    const uhdRe = new RegExp(
-      `watch/${escapeRegExp(id)}/.*?data-uhd="true"`,
-      's',
-    );
 
     movies.set(id, {
       id,
       title: title.trim(),
       lang: movieLang,
       poster,
-      year: yearMatch?.[1] ?? null,
-      uhd: uhdRe.test(html),
+      year: yearMap.get(key) ?? null,
+      uhd: uhdSet.has(key),
     });
   }
 
@@ -206,15 +237,22 @@ function sanitizeStreamUrl(url) {
   return decodeHtmlEntities(url).trim();
 }
 
+/** @param {string} host */
+function isPrivateIp(host) {
+  const privateRe = /^(10\.|127\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|::1$|fc|fd)/i;
+  return privateRe.test(host);
+}
+
 /** @param {string} url */
 function isAllowedStreamUrl(url) {
   try {
     const parsed = new URL(url);
     if (!parsed.pathname.startsWith('/etv/')) return false;
+    if (isPrivateIp(parsed.hostname)) return false;
     if (CDN_HOSTS.includes(parsed.hostname) || parsed.hostname.endsWith('.einthusan.io')) {
       return true;
     }
-    return /^\d{1,3}(\.\d{1,3}){3}$/.test(parsed.hostname);
+    return false;
   } catch {
     return false;
   }
@@ -222,9 +260,13 @@ function isAllowedStreamUrl(url) {
 
 /** @param {string} encrypted */
 function decryptEJLinks(encrypted) {
-  const reordered = encrypted.slice(0, 10) + encrypted.slice(-1) + encrypted.slice(12, -1);
-  const decoded = atob(reordered);
-  return JSON.parse(decoded);
+  try {
+    const reordered = encrypted.slice(0, 10) + encrypted.slice(-1) + encrypted.slice(12, -1);
+    const decoded = atob(reordered);
+    return JSON.parse(decoded);
+  } catch {
+    throw new Error('Could not decrypt stream links');
+  }
 }
 
 /** @param {string} url */
@@ -492,13 +534,13 @@ async function proxyStream(request) {
   const url = new URL(request.url);
   const target = url.searchParams.get('url');
   if (!target) {
-    return new Response('Missing url parameter', { status: 400, headers: corsHeaders });
+    return new Response('Missing url parameter', { status: 400, headers: streamCorsHeaders });
   }
 
   const streamUrl = sanitizeStreamUrl(target);
 
   if (!isAllowedStreamUrl(streamUrl)) {
-    return new Response('Host not allowed', { status: 403, headers: corsHeaders });
+    return new Response('Host not allowed', { status: 403, headers: streamCorsHeaders });
   }
 
   const upstream = await fetch(streamUrl, {
@@ -511,7 +553,7 @@ async function proxyStream(request) {
   });
 
   const headers = new Headers(upstream.headers);
-  headers.set('Access-Control-Allow-Origin', '*');
+  Object.entries(streamCorsHeaders).forEach(([k, v]) => headers.set(k, v));
 
   const contentType = upstream.headers.get('content-type') ?? '';
   const isManifest =
@@ -524,7 +566,7 @@ async function proxyStream(request) {
     if (!text.trim().startsWith('#EXTM3U')) {
       return new Response('Stream unavailable or expired. Go back and try again.', {
         status: 502,
-        headers: corsHeaders,
+        headers: streamCorsHeaders,
       });
     }
 
@@ -553,6 +595,8 @@ async function proxyStream(request) {
 export default {
   /** @param {Request} request @param {object} env @param {ExecutionContext} ctx */
   async fetch(request, env, ctx) {
+    const corsHeaders = makeCorsHeaders(env, request);
+
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders });
     }

@@ -29,6 +29,7 @@ export default function Account() {
 
   const onChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    setMsg(null);
     try {
       await changePassword(current, next);
       setMsg('Password updated.');
@@ -51,11 +52,21 @@ export default function Account() {
       const file = input.files?.[0];
       if (!file) return;
       try {
-        const data = JSON.parse(await file.text()) as { myList: unknown[]; continueWatching: unknown[] };
-        importLibrary({
-          myList: data.myList as typeof myList,
-          continueWatching: data.continueWatching as typeof continueWatching,
-        });
+        const data = JSON.parse(await file.text()) as unknown;
+        if (
+          typeof data !== 'object' ||
+          data === null ||
+          !Array.isArray((data as Record<string, unknown>).myList) ||
+          !Array.isArray((data as Record<string, unknown>).continueWatching)
+        ) {
+          setMsg('Invalid library file.');
+          return;
+        }
+        const { myList: importedList, continueWatching: importedCW } = data as {
+          myList: typeof myList;
+          continueWatching: typeof continueWatching;
+        };
+        importLibrary({ myList: importedList, continueWatching: importedCW });
         setMsg('Library imported.');
       } catch {
         setMsg('Invalid library file.');

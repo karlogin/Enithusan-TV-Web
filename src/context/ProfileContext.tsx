@@ -22,10 +22,25 @@ const ACTIVE_KEY = 'einthusan-active-profile';
 const COLORS = ['#ff3864', '#0080ff', '#46d369', '#f5c518', '#b046ff', '#ff6b35'];
 const DEFAULT: Profile[] = [{ id: 'default', name: 'Main', color: '#ff3864' }];
 
+function isValidProfile(p: unknown): p is Profile {
+  return (
+    typeof p === 'object' &&
+    p !== null &&
+    typeof (p as Profile).id === 'string' &&
+    typeof (p as Profile).name === 'string' &&
+    typeof (p as Profile).color === 'string'
+  );
+}
+
 function loadProfiles(): Profile[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as Profile[];
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed.every(isValidProfile)) {
+        return parsed;
+      }
+    }
   } catch {
     /* ignore */
   }

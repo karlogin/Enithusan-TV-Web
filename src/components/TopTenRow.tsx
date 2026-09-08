@@ -8,10 +8,9 @@ interface TopTenRowProps {
 }
 
 export default function TopTenRow({ movies }: TopTenRowProps) {
-  const top = movies.slice(0, 10);
   const trackRef = useRef<HTMLDivElement>(null);
 
-  if (top.length === 0) return null;
+  if (movies.length === 0) return null;
 
   const scroll = (dir: 'left' | 'right') => {
     const el = trackRef.current;
@@ -24,7 +23,7 @@ export default function TopTenRow({ movies }: TopTenRowProps) {
     <section className="movie-row top-ten-row">
       <div className="movie-row-header">
         <div>
-          <h2 className="section-title">Top {top.length} Today</h2>
+          <h2 className="section-title">Top {movies.length} Today</h2>
           <p className="row-subtitle">Most popular in your language</p>
         </div>
       </div>
@@ -38,7 +37,7 @@ export default function TopTenRow({ movies }: TopTenRowProps) {
           ‹
         </button>
         <div className="top-ten-track" ref={trackRef}>
-          {top.map((movie, i) => (
+          {movies.map((movie, i) => (
             <div key={movie.id} className="top-ten-item">
               <span className="top-ten-num" aria-hidden="true">
                 {i + 1}

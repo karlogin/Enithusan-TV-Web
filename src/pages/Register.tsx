@@ -36,7 +36,7 @@ export default function Register() {
         <form onSubmit={submit} className="auth-form">
           <label>
             Name
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} required autoComplete="name" />
           </label>
           <label>
             Email

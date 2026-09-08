@@ -11,6 +11,7 @@ export default function BecauseYouWatchedRow() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const seed = continueWatching[0];
 
+  const watchedIds = continueWatching.map((m) => m.id).join(',');
   useEffect(() => {
     if (!seed) return;
     let cancelled = false;
@@ -22,14 +23,15 @@ export default function BecauseYouWatchedRow() {
           ...data.featured.mostWatched,
           ...data.featured.recentlyAdded,
         ];
-        const seen = new Set([seed.id, ...continueWatching.map((m) => m.id)]);
+        const seen = new Set(watchedIds.split(',').filter(Boolean));
         setMovies(pool.filter((m) => !seen.has(m.id)).slice(0, 12));
       })
       .catch(() => undefined);
     return () => {
       cancelled = true;
     };
-  }, [language, seed, continueWatching]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language, seed?.id, watchedIds]);
 
   if (!seed || movies.length === 0) return null;
 

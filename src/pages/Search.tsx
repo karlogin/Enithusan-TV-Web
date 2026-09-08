@@ -27,12 +27,16 @@ export default function Search() {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    addSearchHistory(query);
-    setHistory(getSearchHistory());
 
     searchMovies(query, language)
       .then((movies) => {
-        if (!cancelled) setResults(movies);
+        if (!cancelled) {
+          if (movies.length > 0) {
+            addSearchHistory(query);
+            setHistory(getSearchHistory());
+          }
+          setResults(movies);
+        }
       })
       .catch((err: Error) => {
         if (!cancelled) setError(err.message);
