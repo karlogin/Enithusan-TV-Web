@@ -83,8 +83,8 @@ function parseBrowseMovies(html, lang) {
   return [...movies.values()].filter((mv) => mv.lang === lang);
 }
 
-/** @param {string} html @param {string} lang */
-function parseCarouselMovies(html, lang) {
+/** @param {string} html @param {string} lang @param {boolean} includeUnlinked */
+function parseCarouselMovies(html, lang, includeUnlinked = false) {
   /** @type {Map<string, object>} */
   const movies = new Map();
 
@@ -107,23 +107,30 @@ function parseCarouselMovies(html, lang) {
     });
   }
 
-  const unlinkedRe =
-    /<img src="([^"]+moviecovers\/([^/"?]+)[^"]*)">\s*<\/a><a href="" class="title">([^<]+)<\/a>/g;
+  // Cards with no /movie/watch/ link at all aren't confirmed to be in this
+  // language's catalog -- on tabs like "regional hits" these are cross-language
+  // promo cards for other languages entirely (with only a poster filename to
+  // use as a fake id), so only trust this fallback where that's actually the
+  // expected shape (e.g. "coming soon" unreleased titles), not by default.
+  if (includeUnlinked) {
+    const unlinkedRe =
+      /<img src="([^"]+moviecovers\/([^/"?]+)[^"]*)">\s*<\/a><a href="" class="title">([^<]+)<\/a>/g;
 
-  while ((m = unlinkedRe.exec(html)) !== null) {
-    const [, img, id, title] = m;
-    if (movies.has(id)) continue;
-    let poster = img;
-    if (poster && !poster.startsWith('http')) poster = `https:${poster}`;
-    movies.set(id, {
-      id,
-      title: title.trim(),
-      lang,
-      poster,
-      year: null,
-      uhd: /ultrahd/.test(m[0]),
-      comingSoon: true,
-    });
+    while ((m = unlinkedRe.exec(html)) !== null) {
+      const [, img, id, title] = m;
+      if (movies.has(id)) continue;
+      let poster = img;
+      if (poster && !poster.startsWith('http')) poster = `https:${poster}`;
+      movies.set(id, {
+        id,
+        title: title.trim(),
+        lang,
+        poster,
+        year: null,
+        uhd: /ultrahd/.test(m[0]),
+        comingSoon: true,
+      });
+    }
   }
 
   return [...movies.values()];
@@ -149,7 +156,8 @@ function parseFeaturedSections(html, lang) {
   };
 
   for (let i = 1; i < parts.length && i <= labels.length; i++) {
-    featured[labels[i - 1]] = parseCarouselMovies(parts[i], lang);
+    const label = labels[i - 1];
+    featured[label] = parseCarouselMovies(parts[i], lang, label === 'comingSoon');
   }
 
   return featured;
@@ -566,6 +574,25 @@ export default {
         }
         const data = await getHomeData(lang);
         return Response.json(data, { headers: { ...corsHeaders, 'Cache-Control': 'public, max-age=300' } });
+      }
+
+      if (path === '/api/browse-more' || path === '/browse-more') {
+        const lang = url.searchParams.get('lang') ?? 'tamil';
+        const year = url.searchParams.get('year');
+        const page = url.searchParams.get('page') ?? '0';
+        if (!VALID_LANGS.has(lang)) {
+          return Response.json({ error: 'Invalid language' }, { status: 400, headers: corsHeaders });
+        }
+        if (!year || !/^\d{4}$/.test(year)) {
+          return Response.json({ error: 'Invalid year' }, { status: 400, headers: corsHeaders });
+        }
+        if (!/^\d+$/.test(page)) {
+          return Response.json({ error: 'Invalid page' }, { status: 400, headers: corsHeaders });
+        }
+        const resultsUrl = `${BASE}/movie/results/?find=Year&lang=${lang}&year=${year}&page=${page}`;
+        const html = await fetchHtml(resultsUrl);
+        const results = parseSearchResults(html, lang);
+        return Response.json(results, { headers: { ...corsHeaders, 'Cache-Control': 'public, max-age=600' } });
       }
 
       if (path === '/api/search' || path === '/search') {

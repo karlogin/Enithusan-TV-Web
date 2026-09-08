@@ -7,10 +7,10 @@
 }
 
 .logo-mark {
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   flex-shrink: 0;
-  filter: drop-shadow(0 2px 8px rgba(229, 9, 20, 0.35));
+  filter: drop-shadow(0 2px 8px rgba(10, 132, 255, 0.35));
 }
 
 .logo-compact .logo-mark {
@@ -26,21 +26,18 @@
 }
 
 .logo-brand {
-  font-size: 1.35rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
 }
 
 .logo-tag {
-  font-size: 0.72rem;
+  font-size: 0.62rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--netflix-red);
-  padding: 0.15rem 0.35rem;
-  border: 1.5px solid rgba(229, 9, 20, 0.55);
-  border-radius: 4px;
+  color: var(--text-muted);
 }
 
 @media (max-width: 768px) {

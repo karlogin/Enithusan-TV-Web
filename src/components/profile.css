@@ -3,18 +3,9 @@
   align-items: center;
 }
 
-.profile-select {
-  appearance: none;
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: var(--text-primary);
-  padding: 0.35rem 1.75rem 0.35rem 0.65rem;
-  border-radius: 4px;
+.profile-switcher .custom-select-trigger {
   font-size: 0.8rem;
-  cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23fff' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.4rem center;
+  padding: 0.35rem 0.65rem;
 }
 
 .sr-only {
@@ -31,9 +22,9 @@
 .cast-hint {
   margin-top: 1.25rem;
   padding: 0.85rem 1rem;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
   font-size: 0.88rem;
   color: var(--text-secondary);
 }
@@ -98,17 +89,12 @@
 }
 
 .filter-chip.active {
-  background: var(--netflix-red);
-  border-color: var(--netflix-red);
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
 }
 
-.filter-select {
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: var(--text-primary);
-  padding: 0.4rem 0.75rem;
-  border-radius: 4px;
-  font-size: 0.85rem;
+.filter-select-wrap {
+  min-width: 140px;
 }
 
 .search-history {
@@ -131,19 +117,19 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: rgba(229, 9, 20, 0.2);
-  border: 1px solid rgba(229, 9, 20, 0.5);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
   color: #fff;
-  padding: 0.25rem 0.6rem;
-  border-radius: 4px;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
 }
 
 .rate-limit-banner {
-  background: rgba(229, 9, 20, 0.15);
-  border: 1px solid rgba(229, 9, 20, 0.4);
+  background: rgba(255, 69, 58, 0.15);
+  border: 1px solid rgba(255, 69, 58, 0.4);
   color: #fff;
   padding: 0.75rem 4%;
   text-align: center;

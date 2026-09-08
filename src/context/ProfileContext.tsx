@@ -19,8 +19,8 @@ const ProfileContext = createContext<ProfileContextValue | null>(null);
 const STORAGE_KEY = 'einthusan-profiles';
 const ACTIVE_KEY = 'einthusan-active-profile';
 
-const COLORS = ['#e50914', '#0080ff', '#46d369', '#f5c518', '#b046ff', '#ff6b35'];
-const DEFAULT: Profile[] = [{ id: 'default', name: 'Main', color: '#e50914' }];
+const COLORS = ['#ff3864', '#0080ff', '#46d369', '#f5c518', '#b046ff', '#ff6b35'];
+const DEFAULT: Profile[] = [{ id: 'default', name: 'Main', color: '#ff3864' }];
 
 function loadProfiles(): Profile[] {
   try {

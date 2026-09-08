@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
+import CustomSelect from './CustomSelect';
 import Logo from './Logo';
 import ProfileSwitcher from './ProfileSwitcher';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { useTheme } from '../context/ThemeContext';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { LANGUAGES } from '../types';
 import './navbar.css';
@@ -12,14 +12,13 @@ import './navbar.css';
 export default function Navbar() {
   const { language, setLanguage } = useLanguage();
   const { user, logout, loading } = useAuth();
-  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const searchRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useKeyboardShortcuts(() => {
     setSearchOpen(true);
@@ -27,10 +26,21 @@ export default function Navbar() {
   });
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => setScrolled(window.scrollY > 8);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, [menuOpen]);
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,10 +48,6 @@ export default function Navbar() {
     if (!q) return;
     navigate(`/search?q=${encodeURIComponent(q)}`);
     setSearchOpen(false);
-  };
-
-  const cycleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark');
   };
 
   return (
@@ -57,20 +63,6 @@ export default function Navbar() {
 
       <div className="navbar-right">
         <ProfileSwitcher />
-        <select
-          className="language-select"
-          value={language}
-          onChange={(e) => setLanguage(e.target.value as typeof language)}
-          aria-label="Language filter"
-        >
-          {LANGUAGES.map(({ value, label }) => (
-            <option key={value} value={value}>{label}</option>
-          ))}
-        </select>
-
-        <button type="button" className="theme-toggle" onClick={cycleTheme} aria-label="Toggle theme">
-          {theme === 'dark' ? '☀' : theme === 'light' ? '🌙' : '◐'}
-        </button>
 
         <form className="search-form" onSubmit={submitSearch}>
           <div className={`search-input-wrap ${searchOpen ? 'open' : ''}`}>
@@ -78,7 +70,7 @@ export default function Navbar() {
               ref={searchRef}
               className="search-input"
               type="search"
-              placeholder="Titles, people, genres ( / )"
+              placeholder="Search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Search movies"
@@ -103,79 +95,59 @@ export default function Navbar() {
         </form>
 
         {!loading && (
-          <div className="navbar-auth">
-            {user ? (
-              <div className="profile-menu">
-                <button type="button" className="profile-btn" onClick={() => setMenuOpen((v) => !v)} aria-expanded={menuOpen}>
-                  {user.name.charAt(0).toUpperCase()}
-                </button>
-                {menuOpen && (
-                  <div className="profile-dropdown">
+          <div className="profile-menu" ref={menuRef}>
+            <button
+              type="button"
+              className="profile-btn"
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-expanded={menuOpen}
+              aria-label="Account and settings"
+            >
+              {user ? (
+                user.name.charAt(0).toUpperCase()
+              ) : (
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.4 0-8 2.2-8 5v1a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1c0-2.8-3.6-5-8-5Z" /></svg>
+              )}
+            </button>
+            {menuOpen && (
+              <div className="profile-dropdown">
+                {user && (
+                  <>
                     <p className="profile-name">{user.name}</p>
                     <p className="profile-email">{user.email}</p>
+                    <div className="profile-dropdown-sep" />
+                  </>
+                )}
+
+                <div className="profile-dropdown-row">
+                  <CustomSelect
+                    value={language}
+                    onChange={(v) => setLanguage(v as typeof language)}
+                    options={LANGUAGES}
+                    ariaLabel="Language filter"
+                  />
+                </div>
+
+                <div className="profile-dropdown-sep" />
+
+                {user ? (
+                  <>
                     <Link to="/my-list" onClick={() => setMenuOpen(false)}>My List</Link>
                     <Link to="/account" onClick={() => setMenuOpen(false)}>Account</Link>
                     <Link to="/about" onClick={() => setMenuOpen(false)}>About</Link>
                     <button type="button" onClick={async () => { await logout(); setMenuOpen(false); }}>Sign Out</button>
-                  </div>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login" className="profile-dropdown-signin" onClick={() => setMenuOpen(false)}>Sign In</Link>
+                    <Link to="/about" onClick={() => setMenuOpen(false)}>About</Link>
+                  </>
                 )}
               </div>
-            ) : (
-              <Link to="/login" className="nav-signin">Sign In</Link>
             )}
           </div>
         )}
-
-        <button
-          type="button"
-          className="navbar-burger"
-          aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-          aria-expanded={mobileMenuOpen}
-          onClick={() => setMobileMenuOpen((v) => !v)}
-        >
-          {mobileMenuOpen ? (
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 19 5 17.6 10.6 12 5 6.4 6.4 5 12 10.6 17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4Z" /></svg>
-          ) : (
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z" /></svg>
-          )}
-        </button>
       </div>
-
-      {mobileMenuOpen && (
-        <div className="navbar-mobile-menu">
-          <NavLink to="/" end onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => (isActive ? 'active' : '')}>Home</NavLink>
-          <NavLink to="/browse" onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => (isActive ? 'active' : '')}>Browse</NavLink>
-          <NavLink to="/my-list" onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => (isActive ? 'active' : '')}>My List</NavLink>
-
-          <div className="navbar-mobile-row">
-            <select
-              className="language-select"
-              value={language}
-              onChange={(e) => setLanguage(e.target.value as typeof language)}
-              aria-label="Language filter"
-            >
-              {LANGUAGES.map(({ value, label }) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </select>
-            <button type="button" className="theme-toggle" onClick={cycleTheme} aria-label="Toggle theme">
-              {theme === 'dark' ? '☀ Light' : theme === 'light' ? '🌙 System' : '◐ Dark'}
-            </button>
-          </div>
-
-          {!loading && (
-            user ? (
-              <>
-                <NavLink to="/account" onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => (isActive ? 'active' : '')}>Account</NavLink>
-                <NavLink to="/about" onClick={() => setMobileMenuOpen(false)} className={({ isActive }) => (isActive ? 'active' : '')}>About</NavLink>
-                <button type="button" className="navbar-mobile-signout" onClick={async () => { await logout(); setMobileMenuOpen(false); }}>Sign Out</button>
-              </>
-            ) : (
-              <Link to="/login" className="nav-signin navbar-mobile-signin" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
-            )
-          )}
-        </div>
-      )}
     </header>
   );
 }

@@ -1,9 +1,10 @@
 .hero {
   position: relative;
-  height: 56.25vw;
-  max-height: 80vh;
-  min-height: 420px;
+  height: 82vh;
+  max-height: 760px;
+  min-height: 560px;
   margin-top: calc(var(--nav-height) * -1);
+  overflow: hidden;
 }
 
 .hero-backdrop {
@@ -13,6 +14,29 @@
   background-position: center top;
 }
 
+/* No real widescreen art available: fill the frame with a soft, blurred
+   copy of the poster instead of hard-cropping it down to a thin strip. */
+.hero-backdrop--fill {
+  background-size: cover;
+  background-position: center 22%;
+  filter: blur(70px) saturate(1.4) brightness(0.5);
+  transform: scale(1.25);
+}
+
+.hero-poster-inset {
+  position: absolute;
+  top: 50%;
+  right: 8%;
+  transform: translateY(-50%);
+  height: 62%;
+  max-height: 480px;
+  width: auto;
+  object-fit: contain;
+  z-index: 1;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-elevated);
+}
+
 .hero-backdrop::after {
   content: '';
   position: absolute;
@@ -20,23 +44,24 @@
   background:
     var(--gradient-top),
     var(--gradient-bottom),
-    linear-gradient(90deg, rgba(20, 20, 20, 0.95) 0%, transparent 55%);
+    linear-gradient(90deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.5) 45%, transparent 68%);
 }
 
 .hero-content {
   position: absolute;
-  bottom: 18%;
+  bottom: 20%;
   left: 4%;
-  max-width: 520px;
+  max-width: 560px;
   z-index: 2;
 }
 
 .hero-title {
-  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-size: clamp(2.25rem, 4.2vw, 3.75rem);
   font-weight: 700;
   margin: 0 0 1rem;
-  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
-  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.7);
+  line-height: 1.05;
 }
 
 .hero-meta {
@@ -49,12 +74,13 @@
 }
 
 .hero-badge {
-  background: rgba(255, 255, 255, 0.15);
-  padding: 0.15rem 0.5rem;
-  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(12px);
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-pill);
   font-size: 0.75rem;
   font-weight: 600;
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .hero-actions {
@@ -68,7 +94,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 120px;
+  height: 160px;
   background: linear-gradient(transparent, var(--bg-primary));
   z-index: 1;
 }
@@ -76,18 +102,37 @@
 .hero-dots {
   display: flex;
   gap: 0.35rem;
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
 }
 
 .hero-dots button {
   width: 10px;
   height: 4px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.3);
   padding: 0;
+  transition: width 0.2s, background 0.2s;
 }
 
 .hero-dots button.active {
   width: 24px;
-  background: var(--netflix-red);
+  background: var(--brand-primary);
+}
+
+@media (max-width: 900px) {
+  .hero-poster-inset {
+    display: none;
+  }
+
+  .hero-content {
+    max-width: 100%;
+    right: 4%;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero {
+    height: 72vh;
+    min-height: 460px;
+  }
 }

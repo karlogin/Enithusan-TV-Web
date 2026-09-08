@@ -1,10 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { getHome } from '../api';
 import { useLanguage } from '../context/LanguageContext';
+import CustomSelect from '../components/CustomSelect';
 import MovieCard from '../components/MovieCard';
 import { SkeletonPage } from '../components/Skeleton';
 import type { Movie } from '../types';
 import '../components/profile.css';
+
+const PAGE_SIZE = 18;
 
 export default function Browse() {
   const { language } = useLanguage();
@@ -13,6 +16,8 @@ export default function Browse() {
   const [error, setError] = useState<string | null>(null);
   const [uhdOnly, setUhdOnly] = useState(false);
   const [yearFilter, setYearFilter] = useState('');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,6 +69,27 @@ export default function Browse() {
     });
   }, [movies, uhdOnly, yearFilter]);
 
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [uhdOnly, yearFilter, movies]);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((c) => Math.min(c + PAGE_SIZE, filtered.length));
+        }
+      },
+      { rootMargin: '600px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [filtered.length]);
+
+  const visible = filtered.slice(0, visibleCount);
+
   if (loading) return <SkeletonPage />;
 
   if (error) {
@@ -89,23 +115,20 @@ export default function Browse() {
           >
             Ultra HD only
           </button>
-          <select
-            className="filter-select"
+          <CustomSelect
+            className="filter-select-wrap"
             value={yearFilter}
-            onChange={(e) => setYearFilter(e.target.value)}
-            aria-label="Filter by year"
-          >
-            <option value="">All years</option>
-            {years.map((y) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
+            onChange={setYearFilter}
+            options={[{ value: '', label: 'All years' }, ...years.map((y) => ({ value: y, label: y }))]}
+            ariaLabel="Filter by year"
+          />
         </div>
         <div className="browse-grid">
-          {filtered.map((movie) => (
+          {visible.map((movie) => (
             <MovieCard key={movie.id} movie={movie} />
           ))}
         </div>
+        {visibleCount < filtered.length && <div ref={sentinelRef} className="browse-sentinel" />}
       </div>
     </div>
   );

@@ -26,10 +26,11 @@ export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
   return (
     <section className="hero">
       <div
-        className="hero-backdrop"
-        style={{ backgroundImage: `url(${movie.poster})` }}
+        className="hero-backdrop hero-backdrop--fill"
+        style={{ backgroundImage: movie.poster ? `url(${movie.poster})` : undefined }}
         key={movie.id}
       />
+      {movie.poster && <img className="hero-poster-inset" src={movie.poster} alt="" aria-hidden="true" />}
       <div className="hero-content">
         <h1 className="hero-title">{movie.title}</h1>
         <div className="hero-meta">

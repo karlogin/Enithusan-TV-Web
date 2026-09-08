@@ -59,13 +59,18 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
           style={{ backgroundImage: d.poster ? `url(${d.poster})` : undefined }}
         />
         <div className="modal-body">
-          <h2 id="modal-title">{d.title}</h2>
-          <div className="modal-meta">
-            {d.userRating && <span className="rating-badge">★ {d.userRating}</span>}
-            {d.year && <span>{d.year}</span>}
-            <span>{LANGUAGE_LABELS[d.lang]}</span>
-            {d.uhd && <span>Ultra HD</span>}
-            {d.streamQuality && <span>{d.streamQuality}</span>}
+          <div className="modal-top">
+            {d.poster && <img className="modal-poster" src={d.poster} alt="" aria-hidden="true" />}
+            <div className="modal-top-text">
+              <h2 id="modal-title">{d.title}</h2>
+              <div className="modal-meta">
+                {d.userRating && <span className="rating-badge">★ {d.userRating}</span>}
+                {d.year && <span>{d.year}</span>}
+                <span>{LANGUAGE_LABELS[d.lang]}</span>
+                {d.uhd && <span>Ultra HD</span>}
+                {d.streamQuality && <span>{d.streamQuality}</span>}
+              </div>
+            </div>
           </div>
           {loading ? (
             <p className="modal-loading">Loading details…</p>
