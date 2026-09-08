@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { getHome } from '../api';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { getBrowseMore, getHome } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import CustomSelect from '../components/CustomSelect';
 import MovieCard from '../components/MovieCard';
@@ -8,6 +8,8 @@ import type { Movie } from '../types';
 import '../components/profile.css';
 
 const PAGE_SIZE = 18;
+const OLDEST_YEAR = 2015;
+const MAX_EMPTY_YEAR_STREAK = 3;
 
 export default function Browse() {
   const { language } = useLanguage();
@@ -19,9 +21,18 @@ export default function Browse() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
+  // Cursor for fetching genuinely new pages from the source site (not just
+  // revealing what's already loaded) once the initial catalog runs out.
+  const [cursor, setCursor] = useState<{ year: number; page: number } | null>(null);
+  const [exhausted, setExhausted] = useState(false);
+  const [fetchingMore, setFetchingMore] = useState(false);
+  const emptyYearStreak = useRef(0);
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setExhausted(false);
+    emptyYearStreak.current = 0;
 
     getHome(language)
       .then((data) => {
@@ -40,6 +51,7 @@ export default function Browse() {
           return true;
         });
         setMovies(unique);
+        setCursor({ year: new Date().getFullYear(), page: 0 });
       })
       .catch((err: Error) => {
         if (!cancelled) setError(err.message);
@@ -52,6 +64,35 @@ export default function Browse() {
       cancelled = true;
     };
   }, [language]);
+
+  const loadMorePages = useCallback(async () => {
+    if (!cursor || exhausted || fetchingMore) return;
+    setFetchingMore(true);
+    try {
+      const results = await getBrowseMore(language, cursor.year, cursor.page);
+      if (results.length > 0) {
+        setMovies((prev) => {
+          const seen = new Set(prev.map((m) => m.id));
+          const additions = results.filter((m) => !seen.has(m.id));
+          return additions.length ? [...prev, ...additions] : prev;
+        });
+        setCursor({ year: cursor.year, page: cursor.page + 1 });
+        emptyYearStreak.current = 0;
+      } else {
+        emptyYearStreak.current += 1;
+        const nextYear = cursor.year - 1;
+        if (emptyYearStreak.current >= MAX_EMPTY_YEAR_STREAK || nextYear < OLDEST_YEAR) {
+          setExhausted(true);
+        } else {
+          setCursor({ year: nextYear, page: 0 });
+        }
+      }
+    } catch {
+      setExhausted(true);
+    } finally {
+      setFetchingMore(false);
+    }
+  }, [cursor, exhausted, fetchingMore, language]);
 
   const years = useMemo(
     () =>
@@ -71,24 +112,28 @@ export default function Browse() {
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [uhdOnly, yearFilter, movies]);
+  }, [uhdOnly, yearFilter, language]);
 
   useEffect(() => {
     const el = sentinelRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
+        if (!entries[0].isIntersecting) return;
+        if (visibleCount < filtered.length) {
           setVisibleCount((c) => Math.min(c + PAGE_SIZE, filtered.length));
+        } else {
+          void loadMorePages();
         }
       },
       { rootMargin: '600px' },
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [filtered.length]);
+  }, [filtered.length, visibleCount, loadMorePages]);
 
   const visible = filtered.slice(0, visibleCount);
+  const canLoadMore = visibleCount < filtered.length || !exhausted;
 
   if (loading) return <SkeletonPage />;
 
@@ -128,7 +173,8 @@ export default function Browse() {
             <MovieCard key={movie.id} movie={movie} />
           ))}
         </div>
-        {visibleCount < filtered.length && <div ref={sentinelRef} className="browse-sentinel" />}
+        {canLoadMore && <div ref={sentinelRef} className="browse-sentinel" />}
+        {fetchingMore && <p className="browse-loading-more">Loading more…</p>}
       </div>
     </div>
   );

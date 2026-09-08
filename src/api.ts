@@ -38,6 +38,10 @@ export function getHome(lang: Language): Promise<HomeData> {
   return fetchJson<HomeData>(`/home?lang=${lang}`);
 }
 
+export function getBrowseMore(lang: Language, year: number, page: number): Promise<Movie[]> {
+  return fetchJson<Movie[]>(`/browse-more?lang=${lang}&year=${year}&page=${page}`);
+}
+
 export function searchMovies(query: string, lang: Language): Promise<Movie[]> {
   const q = encodeURIComponent(query.trim());
   return fetchJson<Movie[]>(`/search?q=${q}&lang=${lang}`);
