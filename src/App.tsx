@@ -6,6 +6,7 @@ import { UserLibraryProvider } from './context/UserLibraryContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
 import TabBar from './components/TabBar';
+import { ToastProvider } from './components/Toast';
 import Home from './pages/Home';
 import Watch from './pages/Watch';
 import Search from './pages/Search';
@@ -36,6 +37,7 @@ export default function App() {
       <AuthProvider>
         <ProfileProvider>
           <UserLibraryProvider>
+            <ToastProvider>
             <ErrorBoundary>
             <Routes>
               <Route path="/login" element={<Login />} />
@@ -61,6 +63,7 @@ export default function App() {
               />
             </Routes>
             </ErrorBoundary>
+            </ToastProvider>
           </UserLibraryProvider>
         </ProfileProvider>
       </AuthProvider>

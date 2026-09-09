@@ -65,13 +65,17 @@ export default function Search() {
         </div>
 
         {!query && history.length > 0 && (
-          <div className="search-history">
-            {history.map((h) => (
-              <button key={h} type="button" onClick={() => navigate(`/search?q=${encodeURIComponent(h)}`)}>
-                {h}
-              </button>
-            ))}
-            <button type="button" onClick={() => { clearSearchHistory(); setHistory([]); }}>Clear</button>
+          <div className="search-history-section">
+            <p className="search-history-label">Recent searches</p>
+            <div className="search-history">
+              {history.map((h) => (
+                <button key={h} type="button" className="search-history-chip" onClick={() => navigate(`/search?q=${encodeURIComponent(h)}`)}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true" width="14" height="14" fill="currentColor"><path d="M13 3a9 9 0 1 0 0 18A9 9 0 0 0 13 3zM11 18V8l7 5-7 5z"/></svg>
+                  {h}
+                </button>
+              ))}
+              <button type="button" className="search-history-clear" onClick={() => { clearSearchHistory(); setHistory([]); }}>Clear all</button>
+            </div>
           </div>
         )}
 

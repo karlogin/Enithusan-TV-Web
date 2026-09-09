@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { Link } from 'react-router-dom';
 import type { Movie } from '../types';
 import MovieCard from './MovieCard';
 import './movies.css';
@@ -28,6 +29,7 @@ export default function MovieRow({ title, subtitle, movies }: MovieRowProps) {
           <h2 className="section-title">{title}</h2>
           {subtitle && <p className="row-subtitle">{subtitle}</p>}
         </div>
+        <Link to="/browse" className="see-all-link" tabIndex={0}>See All</Link>
       </div>
       <div className="movie-row-track-wrap">
         <button

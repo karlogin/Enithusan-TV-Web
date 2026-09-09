@@ -1,3 +1,4 @@
+import { useToast } from './Toast';
 import { useUserLibrary } from '../context/UserLibraryContext';
 import type { Movie } from '../types';
 import './movies.css';
@@ -9,13 +10,19 @@ interface MyListButtonProps {
 
 export default function MyListButton({ movie, variant = 'pill' }: MyListButtonProps) {
   const { isInMyList, toggleMyList } = useUserLibrary();
+  const { show } = useToast();
   const inList = isInMyList(movie.id);
+
+  const handleClick = () => {
+    toggleMyList(movie);
+    show(inList ? `Removed from My List` : `Added to My List`);
+  };
 
   return (
     <button
       type="button"
       className={`my-list-btn ${variant} ${inList ? 'active' : ''}`}
-      onClick={() => toggleMyList(movie)}
+      onClick={handleClick}
       aria-pressed={inList}
       aria-label={inList ? 'Remove from My List' : 'Add to My List'}
     >

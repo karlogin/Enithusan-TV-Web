@@ -99,24 +99,46 @@
   z-index: 1;
 }
 
-.hero-dots {
+.hero-indicators {
   display: flex;
-  gap: 0.35rem;
+  gap: 0.4rem;
   margin-top: 1.5rem;
+  align-items: center;
 }
 
-.hero-dots button {
-  width: 10px;
-  height: 4px;
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.3);
+.hero-indicator-btn {
+  flex: 1;
+  max-width: 64px;
+  height: 3px;
   padding: 0;
-  transition: width 0.2s, background 0.2s;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  cursor: pointer;
+  transition: max-width 0.2s, background 0.2s;
+  position: relative;
 }
 
-.hero-dots button.active {
-  width: 24px;
-  background: var(--brand-primary);
+.hero-indicator-btn.active {
+  max-width: 96px;
+}
+
+.hero-indicator-fill {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: var(--radius-pill);
+  background: #fff;
+}
+
+.hero-indicator-btn.active .hero-indicator-fill {
+  animation: hero-fill linear forwards;
+  width: 0%;
+}
+
+@keyframes hero-fill {
+  from { width: 0%; }
+  to   { width: 100%; }
 }
 
 @media (max-width: 900px) {

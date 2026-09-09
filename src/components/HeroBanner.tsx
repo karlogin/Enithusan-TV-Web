@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Movie } from '../types';
 import { LANGUAGE_LABELS } from '../types';
 import './hero.css';
+
+const SLIDE_DURATION = 8000;
 
 interface HeroBannerProps {
   movies: Movie[];
@@ -11,18 +13,38 @@ interface HeroBannerProps {
 
 export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
   const [index, setIndex] = useState(0);
+  const [tickKey, setTickKey] = useState(0);
+  const timerRef = useRef<number | null>(null);
   const movie = movies[index] ?? movies[0];
+
+  const goTo = (i: number) => {
+    setIndex(i);
+    setTickKey((k) => k + 1);
+    if (timerRef.current !== null) clearInterval(timerRef.current);
+    timerRef.current = window.setInterval(() => {
+      setIndex((prev) => {
+        const next = (prev + 1) % movies.length;
+        setTickKey((k) => k + 1);
+        return next;
+      });
+    }, SLIDE_DURATION);
+  };
 
   useEffect(() => {
     if (movies.length <= 1) return;
-    let t: number | null = null;
 
     const start = () => {
-      t = window.setInterval(() => {
-        setIndex((i) => (i + 1) % movies.length);
-      }, 8000);
+      timerRef.current = window.setInterval(() => {
+        setIndex((prev) => {
+          const next = (prev + 1) % movies.length;
+          setTickKey((k) => k + 1);
+          return next;
+        });
+      }, SLIDE_DURATION);
     };
-    const stop = () => { if (t !== null) { clearInterval(t); t = null; } };
+    const stop = () => {
+      if (timerRef.current !== null) { clearInterval(timerRef.current); timerRef.current = null; }
+    };
     const onVisibility = () => { document.hidden ? stop() : start(); };
 
     start();
@@ -62,15 +84,23 @@ export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
           </button>
         </div>
         {movies.length > 1 && (
-          <div className="hero-dots" aria-label="Featured titles">
+          <div className="hero-indicators" role="tablist" aria-label="Featured titles">
             {movies.map((m, i) => (
               <button
                 key={m.id}
                 type="button"
-                className={i === index ? 'active' : ''}
+                role="tab"
+                aria-selected={i === index}
                 aria-label={`Show ${m.title}`}
-                onClick={() => setIndex(i)}
-              />
+                className={`hero-indicator-btn ${i === index ? 'active' : ''}`}
+                onClick={() => goTo(i)}
+              >
+                <span
+                  className="hero-indicator-fill"
+                  key={i === index ? tickKey : `static-${i}`}
+                  style={i === index ? { animationDuration: `${SLIDE_DURATION}ms` } : undefined}
+                />
+              </button>
             ))}
           </div>
         )}
