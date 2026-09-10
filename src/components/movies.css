@@ -69,7 +69,7 @@
   width: clamp(140px, 14vw, 220px);
   position: relative;
   border-radius: var(--radius-md);
-  overflow: hidden;
+  overflow: visible;
   transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out), z-index 0s;
   cursor: pointer;
 }
@@ -80,12 +80,47 @@
   box-shadow: var(--shadow-elevated);
 }
 
+.movie-card-link {
+  display: block;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  position: relative;
+}
+
 .movie-card-poster {
   width: 100%;
   aspect-ratio: 2 / 3;
   object-fit: cover;
   background: var(--bg-card);
   border-radius: var(--radius-md);
+  display: block;
+}
+
+.movie-card-play-indicator {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.movie-card-play-indicator svg {
+  width: 44px;
+  height: 44px;
+  fill: #fff;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.7));
+  transform: scale(0.85);
+  transition: transform 0.2s var(--ease-out);
+}
+
+.movie-card:hover .movie-card-play-indicator {
+  opacity: 1;
+}
+
+.movie-card:hover .movie-card-play-indicator svg {
+  transform: scale(1);
 }
 
 .movie-card-overlay {
@@ -129,6 +164,34 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+.movie-card-quick-actions {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 11;
+  display: flex;
+  gap: 0.35rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.movie-card:hover .movie-card-quick-actions {
+  opacity: 1;
+}
+
+.movie-card-quick-actions .my-list-btn {
+  width: 32px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.movie-card-quick-actions .my-list-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
 .browse-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -138,6 +201,7 @@
 
 .browse-grid .movie-card {
   width: 100%;
+  overflow: hidden;
 }
 
 .browse-grid .movie-card:hover {
@@ -324,6 +388,10 @@
   .continue-overlay {
     opacity: 1;
     background: linear-gradient(transparent 55%, rgba(0, 0, 0, 0.9));
+  }
+
+  .movie-card-quick-actions {
+    opacity: 1;
   }
 
   .continue-remove {

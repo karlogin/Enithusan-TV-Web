@@ -17,6 +17,7 @@
 .page-content {
   padding: 0 4%;
   padding-bottom: 4rem;
+  animation: page-enter 0.25s var(--ease-out) both;
 }
 
 .page-header {
@@ -127,14 +128,41 @@
 }
 
 .section-title {
-  font-size: 1.4vw;
-  font-weight: 600;
-  margin: 0 0 0.75rem;
+  font-size: clamp(1rem, 1.4vw, 1.35rem);
+  font-weight: 700;
+  margin: 0 0 0.2rem;
   color: var(--text-primary);
+  position: relative;
+  padding-left: 0.85rem;
 }
 
-@media (max-width: 768px) {
-  .section-title {
-    font-size: 1.1rem;
-  }
+.section-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.1em;
+  bottom: 0.1em;
+  width: 3px;
+  background: var(--brand-gradient);
+  border-radius: var(--radius-pill);
+}
+
+.see-all-link {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  white-space: nowrap;
+  opacity: 0.85;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.see-all-link:hover {
+  opacity: 1;
+}
+
+/* Page fade-in */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
