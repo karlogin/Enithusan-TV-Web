@@ -9,6 +9,7 @@ export default function Logo({ compact = false }: LogoProps) {
   return (
     <Link to="/" className={`logo ${compact ? 'logo-compact' : ''}`} aria-label="Oli home">
       <span className="logo-wordmark">oli</span>
+      {!compact && <span className="logo-tamil" aria-hidden="true">ஒளி</span>}
     </Link>
   );
 }
