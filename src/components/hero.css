@@ -170,6 +170,11 @@
   to   { width: 100%; }
 }
 
+/* Mobile poster — hidden on desktop */
+.hero-poster-mobile {
+  display: none;
+}
+
 @media (max-width: 900px) {
   .hero-poster-inset {
     display: none;
@@ -183,11 +188,40 @@
 
 @media (max-width: 768px) {
   .hero {
-    height: 75vh;
-    min-height: 480px;
+    height: 82vh;
+    min-height: 520px;
   }
 
   .hero-title {
-    font-size: clamp(2rem, 7vw, 2.8rem);
+    font-size: clamp(1.8rem, 6.5vw, 2.6rem);
+  }
+
+  /* Softer backdrop so color bleeds through on mobile */
+  .hero-backdrop--fill {
+    filter: blur(44px) saturate(1.9) brightness(0.48);
+  }
+
+  /* Portrait poster card centered at the top of the hero */
+  .hero-poster-mobile {
+    display: block;
+    position: absolute;
+    top: calc(var(--nav-height) + 0.75rem);
+    left: 50%;
+    transform: translateX(-50%);
+    height: 46%;
+    max-height: 260px;
+    width: auto;
+    max-width: 44%;
+    border-radius: var(--radius-md);
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.75),
+      0 0 0 1px rgba(255, 255, 255, 0.08);
+    object-fit: cover;
+    z-index: 2;
+  }
+
+  /* Push content below the poster */
+  .hero-content {
+    bottom: 6%;
   }
 }

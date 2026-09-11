@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import MovieCard from '../components/MovieCard';
+import MovieModal from '../components/MovieModal';
 import { useUserLibrary } from '../context/UserLibraryContext';
+import type { Movie } from '../types';
 import '../components/movies.css';
 
 function formatDate(ts: number): string {
@@ -16,6 +18,7 @@ function formatDate(ts: number): string {
 export default function History() {
   const { history, clearHistory } = useUserLibrary();
   const [confirming, setConfirming] = useState(false);
+  const [modalMovie, setModalMovie] = useState<Movie | null>(null);
 
   // Group by date label
   const grouped: { label: string; items: typeof history }[] = [];
@@ -84,13 +87,14 @@ export default function History() {
               </h2>
               <div className="browse-grid">
                 {group.items.map((movie) => (
-                  <MovieCard key={`${movie.id}-${movie.watchedAt}`} movie={movie} />
+                  <MovieCard key={`${movie.id}-${movie.watchedAt}`} movie={movie} onMoreInfo={setModalMovie} />
                 ))}
               </div>
             </section>
           ))
         )}
       </div>
+      {modalMovie && <MovieModal movie={modalMovie} onClose={() => setModalMovie(null)} />}
     </div>
   );
 }

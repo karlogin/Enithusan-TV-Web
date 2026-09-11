@@ -89,6 +89,14 @@
   border-radius: var(--radius-md);
   overflow: hidden;
   position: relative;
+  /* Reset button styles when used as a button */
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font: inherit;
 }
 
 .movie-card-poster {
