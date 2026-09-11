@@ -127,10 +127,10 @@ export default function Home() {
       )}
       <div className="page-content" style={{ marginTop: heroCandidates.length ? '-4rem' : '1rem', position: 'relative', zIndex: 2 }}>
         <ContinueWatchingRow items={continueWatching} />
-        <BecauseYouWatchedRow />
-        <TopTenRow movies={topTen} />
+        <BecauseYouWatchedRow onMoreInfo={setModalMovie} />
+        <TopTenRow movies={topTen} onMoreInfo={setModalMovie} />
         {dedupedSections.map(({ key, title, subtitle, movies }) => (
-          <MovieRow key={key} title={title} subtitle={subtitle} movies={movies} />
+          <MovieRow key={key} title={title} subtitle={subtitle} movies={movies} onMoreInfo={setModalMovie} />
         ))}
       </div>
       {modalMovie && <MovieModal movie={modalMovie} onClose={() => setModalMovie(null)} />}

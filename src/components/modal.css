@@ -3,130 +3,248 @@
   inset: 0;
   z-index: 200;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: 4rem 1rem 2rem;
+  padding: 1rem;
   overflow-y: auto;
 }
 
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border: none;
+  animation: modal-backdrop-enter 0.25s ease forwards;
+}
+
+@keyframes modal-backdrop-enter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .modal-panel {
   position: relative;
-  width: min(850px, 100%);
-  background: var(--bg-elevated);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
+  width: min(820px, 100%);
+  background: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: var(--shadow-elevated);
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.05);
   z-index: 1;
+  animation: modal-panel-enter 0.3s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
 }
 
+@keyframes modal-panel-enter {
+  from { opacity: 0; transform: scale(0.94) translateY(16px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── Cinematic hero ───────────────────────────────────────────────────────── */
+
+.modal-hero {
+  position: relative;
+  height: 300px;
+  background-size: cover;
+  background-position: center 20%;
+  overflow: hidden;
+}
+
+@media (max-width: 600px) {
+  .modal-hero {
+    height: 220px;
+  }
+}
+
+.modal-hero-gradient {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(20,20,20,0.96) 100%),
+    linear-gradient(to right, rgba(0,0,0,0.55) 0%, transparent 60%);
+}
+
+/* Close button */
 .modal-close {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
+  top: 0.85rem;
+  right: 0.85rem;
   z-index: 3;
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--glass-surface);
+  background: rgba(20, 20, 20, 0.72);
   backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   color: #fff;
-  font-size: 1.5rem;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s;
 }
 
-.modal-hero {
-  height: 220px;
-  background-size: cover;
-  background-position: center 20%;
-  filter: blur(50px) saturate(1.3) brightness(0.5);
-  transform: scale(1.2);
-  mask-image: linear-gradient(#000 40%, transparent);
+.modal-close:hover {
+  background: rgba(40, 40, 40, 0.9);
 }
+
+.modal-close svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+/* Big play button overlaid on hero */
+.modal-hero-play {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 1.75rem;
+  z-index: 3;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  transition: transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.22s;
+}
+
+.modal-hero-play:hover {
+  transform: scale(1.1);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+}
+
+.modal-hero-play svg {
+  width: 26px;
+  height: 26px;
+  fill: #000;
+  margin-left: 3px;
+}
+
+/* ── Body ─────────────────────────────────────────────────────────────────── */
 
 .modal-body {
-  padding: 0 1.5rem 1.5rem;
-  margin-top: -5rem;
-  position: relative;
-  z-index: 2;
+  padding: 1.25rem 1.75rem 1.75rem;
+}
+
+@media (max-width: 600px) {
+  .modal-body {
+    padding: 1rem 1.25rem 1.5rem;
+  }
 }
 
 .modal-top {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 1.25rem;
   margin-bottom: 1rem;
 }
 
 .modal-poster {
-  width: 120px;
+  width: 96px;
   aspect-ratio: 2 / 3;
   object-fit: cover;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-elevated);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
   flex-shrink: 0;
+  margin-top: -3rem;
+  position: relative;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 600px) {
+  .modal-poster {
+    width: 72px;
+    margin-top: -2rem;
+  }
 }
 
 .modal-top-text {
   flex: 1;
   min-width: 0;
-  padding-bottom: 0.25rem;
+  padding-top: 0.25rem;
 }
 
-.modal-body h2 {
-  font-size: 1.85rem;
-  margin: 0 0 0.6rem;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
-}
-
-@media (max-width: 600px) {
-  .modal-poster {
-    width: 88px;
-  }
-
-  .modal-body h2 {
-    font-size: 1.4rem;
-  }
+.modal-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.4rem, 3.5vw, 2rem);
+  letter-spacing: -0.025em;
+  margin: 0 0 0.5rem;
+  line-height: 1.1;
+  color: #fff;
 }
 
 .modal-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.65rem;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  margin-bottom: 0;
+}
+
+.modal-meta .rating-badge {
   color: #46d369;
-  font-weight: 600;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.quality-pill {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #fff;
 }
 
 .modal-desc {
   color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 0.75rem;
+  line-height: 1.65;
+  margin: 0.85rem 0 0;
+  font-size: 0.95rem;
 }
 
-.modal-genre,
-.modal-cast {
+.modal-details {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.3rem 0.85rem;
+  margin: 0.85rem 0 0;
+  font-size: 0.88rem;
+}
+
+.modal-details dt {
   color: var(--text-muted);
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.modal-details dd {
+  color: var(--text-secondary);
+  margin: 0;
 }
 
 .modal-actions {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
+  align-items: center;
+}
+
+.modal-play-btn {
+  min-width: 120px;
 }
 
 .modal-loading {
   color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
 }

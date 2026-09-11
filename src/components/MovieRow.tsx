@@ -8,9 +8,10 @@ interface MovieRowProps {
   title: string;
   subtitle?: string;
   movies: Movie[];
+  onMoreInfo?: (movie: Movie) => void;
 }
 
-export default function MovieRow({ title, subtitle, movies }: MovieRowProps) {
+export default function MovieRow({ title, subtitle, movies, onMoreInfo }: MovieRowProps) {
   const trackRef = useRef<HTMLDivElement>(null);
 
   if (!movies.length) return null;
@@ -42,7 +43,7 @@ export default function MovieRow({ title, subtitle, movies }: MovieRowProps) {
         </button>
         <div className="movie-row-track" ref={trackRef}>
           {movies.map((movie) => (
-            <MovieCard key={`${movie.id}-${movie.lang}`} movie={movie} />
+            <MovieCard key={`${movie.id}-${movie.lang}`} movie={movie} onMoreInfo={onMoreInfo} />
           ))}
         </div>
         <button

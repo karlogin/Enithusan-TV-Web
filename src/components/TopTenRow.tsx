@@ -5,9 +5,10 @@ import './movies.css';
 
 interface TopTenRowProps {
   movies: Movie[];
+  onMoreInfo?: (movie: Movie) => void;
 }
 
-export default function TopTenRow({ movies }: TopTenRowProps) {
+export default function TopTenRow({ movies, onMoreInfo }: TopTenRowProps) {
   const trackRef = useRef<HTMLDivElement>(null);
 
   if (movies.length === 0) return null;
@@ -42,7 +43,7 @@ export default function TopTenRow({ movies }: TopTenRowProps) {
               <span className="top-ten-num" aria-hidden="true">
                 {i + 1}
               </span>
-              <MovieCard movie={movie} />
+              <MovieCard movie={movie} onMoreInfo={onMoreInfo} />
             </div>
           ))}
         </div>
