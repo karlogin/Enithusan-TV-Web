@@ -286,7 +286,21 @@ export default function VideoPlayer({
     const video = videoRef.current;
     if (!video) return;
 
-    const onPlay = () => setPaused(false);
+    let autoFullscreenDone = false;
+    const onPlay = () => {
+      setPaused(false);
+      if (!autoFullscreenDone) {
+        autoFullscreenDone = true;
+        const container = containerRef.current;
+        if (!container) return;
+        const videoIos = video as HTMLVideoElement & { webkitEnterFullscreen?: () => void; webkitDisplayingFullscreen?: boolean };
+        if (!container.requestFullscreen && videoIos.webkitEnterFullscreen) {
+          if (!videoIos.webkitDisplayingFullscreen) videoIos.webkitEnterFullscreen();
+        } else if (container.requestFullscreen && !document.fullscreenElement) {
+          container.requestFullscreen().catch(() => undefined);
+        }
+      }
+    };
     const onPause = () => setPaused(true);
     const onTimeUpdate = () => {
       setCurrentTime(video.currentTime);

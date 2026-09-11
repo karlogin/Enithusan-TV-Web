@@ -24,3 +24,18 @@
 .logo-compact .logo-wordmark {
   font-size: 1.25rem;
 }
+
+.logo-tamil {
+  font-family: 'Noto Sans Tamil', 'Latha', 'Tamil MN', sans-serif;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.38);
+  letter-spacing: 0.06em;
+  margin-left: 0.45rem;
+  line-height: 1;
+  align-self: center;
+  transition: opacity 0.15s;
+}
+
+.logo:hover .logo-tamil {
+  opacity: 0.6;
+}
