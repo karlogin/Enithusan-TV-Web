@@ -1,9 +1,26 @@
 .logo {
   display: inline-flex;
   align-items: center;
+  gap: 0.5rem;
   text-decoration: none;
   color: inherit;
   flex-shrink: 0;
+}
+
+.logo-vada-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  transition: transform 0.2s var(--ease-spring);
+}
+
+.logo:hover .logo-vada-icon {
+  transform: rotate(-8deg) scale(1.08);
+}
+
+.logo-compact .logo-vada-icon {
+  width: 24px;
+  height: 24px;
 }
 
 .logo-wordmark {
@@ -30,7 +47,6 @@
   font-size: 0.72rem;
   color: rgba(255, 255, 255, 0.38);
   letter-spacing: 0.06em;
-  margin-left: 0.45rem;
   line-height: 1;
   align-self: center;
   transition: opacity 0.15s;
