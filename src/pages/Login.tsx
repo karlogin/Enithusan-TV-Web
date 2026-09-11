@@ -20,7 +20,7 @@ export default function Login() {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      setError(err instanceof Error ? err.message : 'Sign in failed');
     } finally {
       setLoading(false);
     }
@@ -28,19 +28,37 @@ export default function Login() {
 
   return (
     <div className="auth-page">
-      <div className="auth-card">
+      <div className="auth-brand">
         <Logo />
+      </div>
+      <div className="auth-card">
         <h1>Sign In</h1>
         <p className="auth-sub">Watch Tamil, Hindi & Malayalam movies anywhere.</p>
         <form onSubmit={submit} className="auth-form">
-          <label>
-            Email
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
-          </label>
-          <label>
-            Password
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
-          </label>
+          <div className="auth-field">
+            <input
+              id="login-email"
+              type="email"
+              placeholder=" "
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
+            <label htmlFor="login-email">Email</label>
+          </div>
+          <div className="auth-field">
+            <input
+              id="login-password"
+              type="password"
+              placeholder=" "
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+            />
+            <label htmlFor="login-password">Password</label>
+          </div>
           {error && <p className="auth-error">{error}</p>}
           <button type="submit" className="btn btn-primary auth-submit" disabled={loading}>
             {loading ? 'Signing in…' : 'Sign In'}
@@ -48,8 +66,8 @@ export default function Login() {
         </form>
         <p className="auth-footer">
           <Link to="/forgot-password">Forgot password?</Link>
-          {' · '}
-          New here? <Link to="/register">Create an account</Link>
+          <br />
+          New to Eithu? <Link to="/register">Create an account</Link>
         </p>
       </div>
     </div>

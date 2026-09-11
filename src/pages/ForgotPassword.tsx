@@ -17,7 +17,7 @@ export default function ForgotPassword() {
     setResetUrl(null);
     try {
       const res = await forgotPassword(email);
-      setMessage(res.message ?? 'If that email exists, reset instructions were sent.');
+      setMessage(res.message ?? 'If that email is registered, reset instructions were sent.');
       if (res.resetUrl) setResetUrl(res.resetUrl);
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Request failed');
@@ -28,18 +28,34 @@ export default function ForgotPassword() {
 
   return (
     <div className="auth-page">
-      <div className="auth-card">
+      <div className="auth-brand">
         <Logo />
+      </div>
+      <div className="auth-card">
         <h1>Reset Password</h1>
+        <p className="auth-sub">Enter your email and we'll send a reset link.</p>
         <form onSubmit={submit} className="auth-form">
-          <label>
-            Email
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </label>
-          {message && <p className="auth-sub">{message}</p>}
-          {resetUrl && (
-            <p className="auth-sub">
-              Reset link: <Link to={resetUrl.replace(/^https?:\/\/[^/]+/, '')}>{resetUrl}</Link>
+          <div className="auth-field">
+            <input
+              id="fp-email"
+              type="email"
+              placeholder=" "
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
+            <label htmlFor="fp-email">Email</label>
+          </div>
+          {message && (
+            <p className="auth-msg">
+              {message}
+              {resetUrl && (
+                <>
+                  {' '}
+                  <Link to={resetUrl.replace(/^https?:\/\/[^/]+/, '')}>Use link →</Link>
+                </>
+              )}
             </p>
           )}
           <button type="submit" className="btn btn-primary auth-submit" disabled={loading}>

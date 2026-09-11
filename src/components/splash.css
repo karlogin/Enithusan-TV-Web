@@ -1,0 +1,38 @@
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.splash-wordmark {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(2.75rem, 8vw, 5.5rem);
+  color: #fff;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  opacity: 0;
+  animation: splash-rise 2s var(--ease-out) forwards;
+}
+
+@keyframes splash-rise {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.97); }
+  30%  { opacity: 1; transform: translateY(0)   scale(1); }
+  72%  { opacity: 1; transform: translateY(0)   scale(1); }
+  100% { opacity: 0; transform: translateY(-4px) scale(1.01); }
+}
+
+.splash-exit {
+  animation: splash-fade-out 0.55s var(--ease-in-out) forwards;
+}
+
+@keyframes splash-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}

@@ -32,11 +32,11 @@ export default function Account() {
     setMsg(null);
     try {
       await changePassword(current, next);
-      setMsg('Password updated.');
+      setMsg('Password updated successfully.');
       setCurrent('');
       setNext('');
     } catch (err) {
-      setMsg(err instanceof Error ? err.message : 'Failed');
+      setMsg(err instanceof Error ? err.message : 'Failed to update password.');
     }
   };
 
@@ -67,7 +67,7 @@ export default function Account() {
           continueWatching: typeof continueWatching;
         };
         importLibrary({ myList: importedList, continueWatching: importedCW });
-        setMsg('Library imported.');
+        setMsg('Library imported successfully.');
       } catch {
         setMsg('Invalid library file.');
       }
@@ -77,51 +77,103 @@ export default function Account() {
 
   return (
     <div className="page">
-      <div className="page-content" style={{ maxWidth: 520, paddingBottom: '4rem' }}>
+      <div className="page-content" style={{ maxWidth: 560, paddingBottom: '5rem' }}>
         <div className="page-header">
           <h1>Account</h1>
-          <p className="page-subtitle">{user.email}</p>
+          <p className="page-subtitle">{user.name} · {user.email}</p>
         </div>
 
-        <section style={{ marginBottom: '2rem' }}>
-          <h2>Change password</h2>
+        <section className="account-section">
+          <h2>Change Password</h2>
           <form onSubmit={onChangePassword} className="auth-form">
-            <label>Current<input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} required /></label>
-            <label>New<input type="password" value={next} onChange={(e) => setNext(e.target.value)} required minLength={6} /></label>
-            {msg && <p className="auth-sub">{msg}</p>}
-            <button type="submit" className="btn btn-primary">Update</button>
+            <div className="auth-field">
+              <input
+                id="acc-current"
+                type="password"
+                placeholder=" "
+                value={current}
+                onChange={(e) => setCurrent(e.target.value)}
+                required
+                autoComplete="current-password"
+              />
+              <label htmlFor="acc-current">Current password</label>
+            </div>
+            <div className="auth-field">
+              <input
+                id="acc-next"
+                type="password"
+                placeholder=" "
+                value={next}
+                onChange={(e) => setNext(e.target.value)}
+                required
+                minLength={6}
+                autoComplete="new-password"
+              />
+              <label htmlFor="acc-next">New password</label>
+            </div>
+            {msg && <p className="auth-msg">{msg}</p>}
+            <button type="submit" className="btn btn-secondary" style={{ alignSelf: 'flex-start' }}>
+              Update Password
+            </button>
           </form>
         </section>
 
-        <section style={{ marginBottom: '2rem' }}>
+        <section className="account-section">
           <h2>Profiles</h2>
-          <ul style={{ listStyle: 'none', padding: 0, margin: '0.75rem 0' }}>
-            {profiles.map((p) => (
-              <li key={p.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-                <span>{p.name}{p.isKids ? ' (Kids)' : ''}</span>
-                {p.id !== 'default' && (
-                  <button type="button" onClick={() => removeProfile(p.id)}>Remove</button>
-                )}
-              </li>
-            ))}
-          </ul>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <input value={newProfile} onChange={(e) => setNewProfile(e.target.value)} placeholder="New profile name" />
-            <button type="button" className="btn btn-secondary" onClick={() => { if (newProfile.trim()) { addProfile(newProfile.trim()); setNewProfile(''); } }}>
+          {profiles.map((p) => (
+            <div key={p.id} className="account-row">
+              <span className="account-row-name">
+                {p.name}{p.isKids ? ' · Kids' : ''}
+              </span>
+              {p.id !== 'default' && (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ padding: '0.35rem 0.85rem', fontSize: '0.82rem' }}
+                  onClick={() => removeProfile(p.id)}
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          ))}
+          <div className="account-add-row">
+            <input
+              value={newProfile}
+              onChange={(e) => setNewProfile(e.target.value)}
+              placeholder="New profile name"
+            />
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => { if (newProfile.trim()) { addProfile(newProfile.trim()); setNewProfile(''); } }}
+            >
               Add
             </button>
           </div>
         </section>
 
-        <section style={{ marginBottom: '2rem' }}>
-          <h2>My List backup</h2>
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem' }}>
+        <section className="account-section">
+          <h2>Library Backup</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', margin: '0 0 0.75rem', lineHeight: 1.5 }}>
+            Export your watchlist and progress as a JSON file, or import a previous backup.
+          </p>
+          <div className="account-actions">
             <button type="button" className="btn btn-secondary" onClick={onExport}>Export JSON</button>
             <button type="button" className="btn btn-secondary" onClick={onImport}>Import JSON</button>
           </div>
         </section>
 
-        <button type="button" className="btn btn-secondary" onClick={() => logout()}>Sign Out</button>
+        <section className="account-section" style={{ borderBottom: 'none' }}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            style={{ color: '#ff6b6b', borderColor: 'rgba(255,80,80,0.18)' }}
+            onClick={() => logout()}
+          >
+            Sign Out
+          </button>
+        </section>
       </div>
     </div>
   );

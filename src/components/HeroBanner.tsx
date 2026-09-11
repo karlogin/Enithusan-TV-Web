@@ -14,8 +14,15 @@ interface HeroBannerProps {
 export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
   const [index, setIndex] = useState(0);
   const [tickKey, setTickKey] = useState(0);
+  const [scrollY, setScrollY] = useState(0);
   const timerRef = useRef<number | null>(null);
   const movie = movies[index] ?? movies[0];
+
+  useEffect(() => {
+    const onScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const goTo = (i: number) => {
     setIndex(i);
@@ -57,20 +64,33 @@ export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
 
   if (!movie) return null;
 
+  const parallax = scrollY * 0.22;
+
   return (
     <section className="hero" aria-label="Featured titles" aria-live="polite" aria-atomic="true">
       <div
         className="hero-backdrop hero-backdrop--fill"
-        style={{ backgroundImage: movie.poster ? `url(${movie.poster})` : undefined }}
+        style={{
+          backgroundImage: movie.poster ? `url(${movie.poster})` : undefined,
+          transform: `scale(1.3) translateY(${parallax}px)`,
+        }}
         key={movie.id}
       />
-      {movie.poster && <img className="hero-poster-inset" src={movie.poster} alt="" aria-hidden="true" />}
-      <div className="hero-content">
+      {movie.poster && (
+        <img
+          className="hero-poster-inset"
+          src={movie.poster}
+          alt=""
+          aria-hidden="true"
+          style={{ transform: `translateY(calc(-50% + ${scrollY * -0.06}px))` }}
+        />
+      )}
+      <div className="hero-content" style={{ transform: `translateY(${scrollY * 0.08}px)` }}>
+        <p className="hero-lang">{LANGUAGE_LABELS[movie.lang]}</p>
         <h1 className="hero-title">{movie.title}</h1>
         <div className="hero-meta">
           {movie.uhd && <span className="hero-badge">ULTRA HD</span>}
           {movie.year && <span>{movie.year}</span>}
-          <span>{LANGUAGE_LABELS[movie.lang]}</span>
         </div>
         <div className="hero-actions">
           <Link to={`/watch/${movie.id}?lang=${movie.lang}`} className="btn btn-play">
