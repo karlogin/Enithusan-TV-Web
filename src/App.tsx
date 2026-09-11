@@ -7,8 +7,10 @@ import { UserLibraryProvider } from './context/UserLibraryContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
 import Splash from './components/Splash';
+import SpotlightSearch from './components/SpotlightSearch';
 import TabBar from './components/TabBar';
 import { ToastProvider } from './components/Toast';
+import { SpotlightProvider } from './context/SpotlightContext';
 import Home from './pages/Home';
 import Watch from './pages/Watch';
 import Search from './pages/Search';
@@ -34,6 +36,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
       <Navbar />
       <main id="main-content">{children}</main>
       <TabBar />
+      <SpotlightSearch />
     </div>
   );
 }
@@ -52,6 +55,7 @@ export default function App() {
       <AuthProvider>
         <ProfileProvider>
           <UserLibraryProvider>
+          <SpotlightProvider>
             <ToastProvider>
             <ErrorBoundary>
             <Routes>
@@ -80,6 +84,7 @@ export default function App() {
             </Routes>
             </ErrorBoundary>
             </ToastProvider>
+          </SpotlightProvider>
           </UserLibraryProvider>
         </ProfileProvider>
       </AuthProvider>
