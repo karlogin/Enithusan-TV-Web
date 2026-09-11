@@ -1,7 +1,7 @@
 import type { HomeData, Language, Movie, MovieDetails, User, UserLibrary } from './types';
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? '/api';
-const TOKEN_KEY = 'einthusan-auth-token';
+const TOKEN_KEY = 'vadai-auth-token';
 
 function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);

@@ -77,7 +77,7 @@ export const LANGUAGE_LABELS: Record<Language, string> = {
 // "comingSoon" is deliberately excluded: those titles have no watch link yet
 // (not released), and we don't show anything the user can't actually play.
 export const HOME_SECTIONS: { key: keyof HomeData['featured'] | 'browse'; title: string; subtitle?: string }[] = [
-  { key: 'mostWatched', title: 'Popular on Einthusan', subtitle: 'What everyone is watching right now' },
+  { key: 'mostWatched', title: 'Popular on Vadai', subtitle: 'What everyone is watching right now' },
   { key: 'recentlyAdded', title: 'New Releases', subtitle: 'Fresh titles added this week' },
   { key: 'staffPicks', title: 'Critics\' Choice', subtitle: 'Hand-picked by our team' },
   { key: 'regionalHits', title: 'Top in Your Region', subtitle: 'Trending near you' },

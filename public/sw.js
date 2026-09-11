@@ -1,4 +1,4 @@
-const CACHE = 'einthusan-shell-v2';
+const CACHE = 'vadai-shell-v1';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
