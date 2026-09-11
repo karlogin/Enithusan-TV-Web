@@ -51,8 +51,8 @@ export default function Home() {
     };
   }, [language, retryCount]);
 
-  const { heroCandidates, topTen, dedupedSections } = useMemo(() => {
-    if (!data) return { heroCandidates: [], topTen: [], dedupedSections: [] };
+  const { heroCandidates, topTen, newThisWeek, dedupedSections } = useMemo(() => {
+    if (!data) return { heroCandidates: [], topTen: [], newThisWeek: [], dedupedSections: [] };
 
     const candidates = [
       ...data.featured.mostWatched.slice(0, 5),
@@ -70,7 +70,10 @@ export default function Home() {
       .filter((m, i, arr) => arr.findIndex((x) => x.id === m.id) === i);
     const ten = topTenPool.slice(0, 10);
 
-    const seen = new Set(ten.map((m) => m.id));
+    // New This Week — recentlyAdded filtered by language, pinned before other sections
+    const newWeek = data.featured.recentlyAdded.filter((m) => m.lang === language);
+
+    const seen = new Set([...ten.map((m) => m.id), ...newWeek.map((m) => m.id)]);
     const rawSections = HOME_SECTIONS.map(({ key, title, subtitle }) => {
       const source = key === 'browse' ? data.browse : data.featured[key];
       const movies = source.filter((m) => m.lang === language && !seen.has(m.id));
@@ -100,7 +103,7 @@ export default function Home() {
       }
     }
 
-    return { heroCandidates: candidates, topTen: ten, dedupedSections: deduped };
+    return { heroCandidates: candidates, topTen: ten, newThisWeek: newWeek, dedupedSections: deduped };
   }, [data, language]);
 
   if (loading) return <SkeletonPage />;
@@ -128,6 +131,9 @@ export default function Home() {
       <div className="page-content" style={{ marginTop: heroCandidates.length ? '-4rem' : '1rem', position: 'relative', zIndex: 2 }}>
         <ContinueWatchingRow items={continueWatching} />
         <BecauseYouWatchedRow onMoreInfo={setModalMovie} />
+        {newThisWeek.length > 0 && (
+          <MovieRow title="New This Week" subtitle="Fresh titles added this week" movies={newThisWeek} onMoreInfo={setModalMovie} />
+        )}
         <TopTenRow movies={topTen} onMoreInfo={setModalMovie} />
         {dedupedSections.map(({ key, title, subtitle, movies }) => (
           <MovieRow key={key} title={title} subtitle={subtitle} movies={movies} onMoreInfo={setModalMovie} />

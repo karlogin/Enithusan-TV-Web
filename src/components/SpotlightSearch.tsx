@@ -127,74 +127,77 @@ export default function SpotlightSearch() {
           </button>
         </div>
 
-        {/* Results */}
-        {results.length > 0 && (
-          <ul ref={listRef} className="spotlight-results" role="listbox">
-            {results.slice(0, 12).map((movie, i) => (
-              <li key={`${movie.id}-${movie.lang}`} role="option" aria-selected={focusIdx === i}>
-                <button
-                  type="button"
-                  className="spotlight-result-item"
-                  data-result
-                  tabIndex={0}
-                  onClick={() => goToMovie(movie)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'ArrowDown') { e.preventDefault(); const el = listRef.current?.querySelectorAll<HTMLElement>('[data-result]')[i + 1]; el?.focus(); setFocusIdx(i + 1); }
-                    else if (e.key === 'ArrowUp') { e.preventDefault(); if (i === 0) { inputRef.current?.focus(); setFocusIdx(-1); } else { listRef.current?.querySelectorAll<HTMLElement>('[data-result]')[i - 1]?.focus(); setFocusIdx(i - 1); } }
-                  }}
-                >
-                  <img src={movie.poster} alt="" className="spotlight-poster" loading="lazy" />
-                  <div className="spotlight-result-info">
-                    <span className="spotlight-result-title">{movie.title}</span>
-                    <span className="spotlight-result-meta">
-                      {movie.year && <span>{movie.year}</span>}
-                      <span className="spotlight-lang-chip">{LANGUAGE_LABELS[movie.lang]}</span>
-                      {movie.uhd && <span className="spotlight-uhd-chip">UHD</span>}
-                    </span>
-                  </div>
-                  <svg className="spotlight-result-arrow" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </button>
-              </li>
-            ))}
-            {results.length > 12 && (
-              <li>
-                <button type="button" className="spotlight-see-all" onClick={() => goToQuery(query)}>
-                  See all {results.length} results for &ldquo;{query}&rdquo;
-                </button>
-              </li>
-            )}
-          </ul>
-        )}
-
-        {/* Recent searches */}
-        {!query && history.length > 0 && (
-          <div className="spotlight-history">
-            <div className="spotlight-section-label">
-              <span>Recent</span>
-              <button type="button" className="spotlight-history-clear" onClick={() => { clearSearchHistory(); setHistory([]); }}>Clear</button>
-            </div>
-            <div className="spotlight-chips">
-              {history.map((h) => (
-                <button key={h} type="button" className="spotlight-chip" onClick={() => setQuery(h)}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3a9 9 0 1 0 0 18A9 9 0 0 0 13 3zM11 18V8l7 5-7 5z" /></svg>
-                  {h}
-                </button>
+        {/* Scrollable body — on mobile this section fills remaining height */}
+        <div className="spotlight-body">
+          {/* Results */}
+          {results.length > 0 && (
+            <ul ref={listRef} className="spotlight-results" role="listbox">
+              {results.slice(0, 12).map((movie, i) => (
+                <li key={`${movie.id}-${movie.lang}`} role="option" aria-selected={focusIdx === i}>
+                  <button
+                    type="button"
+                    className="spotlight-result-item"
+                    data-result
+                    tabIndex={0}
+                    onClick={() => goToMovie(movie)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowDown') { e.preventDefault(); const el = listRef.current?.querySelectorAll<HTMLElement>('[data-result]')[i + 1]; el?.focus(); setFocusIdx(i + 1); }
+                      else if (e.key === 'ArrowUp') { e.preventDefault(); if (i === 0) { inputRef.current?.focus(); setFocusIdx(-1); } else { listRef.current?.querySelectorAll<HTMLElement>('[data-result]')[i - 1]?.focus(); setFocusIdx(i - 1); } }
+                    }}
+                  >
+                    <img src={movie.poster} alt="" className="spotlight-poster" loading="lazy" />
+                    <div className="spotlight-result-info">
+                      <span className="spotlight-result-title">{movie.title}</span>
+                      <span className="spotlight-result-meta">
+                        {movie.year && <span>{movie.year}</span>}
+                        <span className="spotlight-lang-chip">{LANGUAGE_LABELS[movie.lang]}</span>
+                        {movie.uhd && <span className="spotlight-uhd-chip">UHD</span>}
+                      </span>
+                    </div>
+                    <svg className="spotlight-result-arrow" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </button>
+                </li>
               ))}
+              {results.length > 12 && (
+                <li>
+                  <button type="button" className="spotlight-see-all" onClick={() => goToQuery(query)}>
+                    See all {results.length} results for &ldquo;{query}&rdquo;
+                  </button>
+                </li>
+              )}
+            </ul>
+          )}
+
+          {/* Recent searches */}
+          {!query && history.length > 0 && (
+            <div className="spotlight-history">
+              <div className="spotlight-section-label">
+                <span>Recent</span>
+                <button type="button" className="spotlight-history-clear" onClick={() => { clearSearchHistory(); setHistory([]); }}>Clear</button>
+              </div>
+              <div className="spotlight-chips">
+                {history.map((h) => (
+                  <button key={h} type="button" className="spotlight-chip" onClick={() => setQuery(h)}>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3a9 9 0 1 0 0 18A9 9 0 0 0 13 3zM11 18V8l7 5-7 5z" /></svg>
+                    {h}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Empty query prompt */}
-        {!query && history.length === 0 && (
-          <p className="spotlight-hint">Type to search Tamil, Hindi &amp; Malayalam movies</p>
-        )}
+          {/* Empty query prompt */}
+          {!query && history.length === 0 && (
+            <p className="spotlight-hint">Type to search Tamil, Hindi &amp; Malayalam movies</p>
+          )}
 
-        {/* No results */}
-        {query && !loading && results.length === 0 && (
-          <p className="spotlight-hint">No results for &ldquo;{query}&rdquo;</p>
-        )}
+          {/* No results */}
+          {query && !loading && results.length === 0 && (
+            <p className="spotlight-hint">No results for &ldquo;{query}&rdquo;</p>
+          )}
+        </div>
       </div>
     </div>
   );
