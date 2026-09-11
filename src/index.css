@@ -43,7 +43,7 @@
 }
 
 :root {
-  --nav-height: 54px;
+  --nav-height: calc(54px + env(safe-area-inset-top, 0px));
   --font-display: 'Playfair Display', 'New York', Georgia, 'Times New Roman', serif;
   color-scheme: dark;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
