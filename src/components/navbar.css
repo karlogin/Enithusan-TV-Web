@@ -262,18 +262,12 @@
     display: none;
   }
 
+  .search-toggle {
+    display: none;
+  }
+
   .navbar-right {
     gap: 0.3rem;
-  }
-
-  .search-toggle {
-    width: 44px;
-    height: 44px;
-  }
-
-  .search-toggle svg {
-    width: 20px;
-    height: 20px;
   }
 
   .profile-btn {

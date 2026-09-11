@@ -131,6 +131,12 @@
   color: inherit;
 }
 
+/* ── Scrollable body wrapper ───────────────────────────────────────────────── */
+
+.spotlight-body {
+  /* desktop: no special treatment, natural height */
+}
+
 /* ── Results ────────────────────────────────────────────────────────────────── */
 
 .spotlight-results {
@@ -303,7 +309,7 @@
   margin: 0;
 }
 
-/* Mobile: panel fills most of screen */
+/* Mobile: bottom sheet with sticky input and scrollable results */
 @media (max-width: 600px) {
   .spotlight-backdrop {
     align-items: flex-end;
@@ -313,21 +319,88 @@
   .spotlight-panel {
     width: 100%;
     border-radius: 24px 24px 0 0;
-    max-height: 85vh;
-    overflow-y: auto;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     animation: spotlight-slide-up 0.25s var(--ease-spring) both;
   }
 
   @keyframes spotlight-slide-up {
-    from { opacity: 0; transform: translateY(20px); }
+    from { opacity: 0; transform: translateY(24px); }
     to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Drag handle */
+  .spotlight-panel::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 10px auto 0;
+    flex-shrink: 0;
+  }
+
+  /* Input stays pinned at top */
+  .spotlight-input-row {
+    flex-shrink: 0;
+    padding: 0.7rem 1rem 0.85rem;
+  }
+
+  .spotlight-input {
+    font-size: 1rem;
+  }
+
+  /* Body section scrolls, input stays fixed */
+  .spotlight-body {
+    flex: 1 1 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   .spotlight-results {
     max-height: none;
   }
 
-  .spotlight-input {
+  /* Bigger touch targets for result rows */
+  .spotlight-result-item {
+    padding: 0.75rem 1rem;
+    min-height: 68px;
+  }
+
+  .spotlight-poster {
+    width: 44px;
+    height: 62px;
+  }
+
+  .spotlight-result-title {
     font-size: 1rem;
+  }
+
+  .spotlight-result-meta {
+    font-size: 0.8rem;
+  }
+
+  /* History / hints also scroll */
+  .spotlight-history {
+    flex-shrink: 0;
+  }
+
+  .spotlight-hint {
+    flex-shrink: 0;
+  }
+
+  .spotlight-see-all {
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  /* Larger chip touch targets */
+  .spotlight-chip {
+    padding: 0.5rem 0.9rem;
+    font-size: 0.88rem;
   }
 }
