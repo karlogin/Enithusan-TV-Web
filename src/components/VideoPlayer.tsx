@@ -347,6 +347,55 @@ export default function VideoPlayer({
     };
   }, []);
 
+  // ── Media Session API (Google TV / remote control / lock screen) ────────────
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: title ?? 'Oli',
+      artist: 'Oli · ஒளி',
+      artwork: poster ? [{ src: poster, sizes: '512x512', type: 'image/jpeg' }] : [],
+    });
+  }, [title, poster]);
+
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    const video = videoRef.current;
+    if (!video) return;
+
+    const seek = (offset: number) => {
+      video.currentTime = Math.max(0, Math.min(video.duration || 0, video.currentTime + offset));
+    };
+
+    navigator.mediaSession.setActionHandler('play', () => { video.play().catch(() => undefined); });
+    navigator.mediaSession.setActionHandler('pause', () => { video.pause(); });
+    navigator.mediaSession.setActionHandler('stop', () => { video.pause(); video.currentTime = 0; });
+    navigator.mediaSession.setActionHandler('seekbackward', (d) => seek(-(d.seekOffset ?? 10)));
+    navigator.mediaSession.setActionHandler('seekforward', (d) => seek(d.seekOffset ?? 10));
+    navigator.mediaSession.setActionHandler('seekto', (d) => {
+      if (d.seekTime != null) video.currentTime = d.seekTime;
+    });
+
+    return () => {
+      (['play', 'pause', 'stop', 'seekbackward', 'seekforward', 'seekto'] as MediaSessionAction[]).forEach((a) => {
+        try { navigator.mediaSession.setActionHandler(a, null); } catch { /* unsupported */ }
+      });
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    navigator.mediaSession.playbackState = paused ? 'paused' : 'playing';
+  }, [paused]);
+
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    const video = videoRef.current;
+    if (!video || !duration) return;
+    try {
+      navigator.mediaSession.setPositionState({ duration, position: Math.min(currentTime, duration), playbackRate: video.playbackRate });
+    } catch { /* unsupported */ }
+  }, [currentTime, duration]);
+
   // ── Auto-hide controls ───────────────────────────────────────────────────────
   const revealControls = useCallback(() => {
     setShowControls(true);
@@ -561,6 +610,30 @@ export default function VideoPlayer({
         case 'ArrowDown':
           e.preventDefault();
           changeVolume(Math.max(0, (videoRef.current?.volume ?? 0) - 0.1));
+          break;
+        // Google TV / media remote keys
+        case 'MediaPlayPause':
+        case 'MediaPlay':
+        case 'MediaPause':
+          e.preventDefault();
+          togglePlay();
+          break;
+        case 'MediaRewind':
+        case 'MediaTrackPrevious':
+          e.preventDefault();
+          skip(-10);
+          break;
+        case 'MediaFastForward':
+        case 'MediaTrackNext':
+          e.preventDefault();
+          skip(10);
+          break;
+        case 'Enter':
+          // OK/Select on D-pad — toggle play if player is focused
+          if (containerRef.current?.contains(document.activeElement) || document.activeElement === document.body) {
+            e.preventDefault();
+            togglePlay();
+          }
           break;
       }
     };

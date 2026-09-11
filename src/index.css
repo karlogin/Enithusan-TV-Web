@@ -102,6 +102,21 @@ img {
   border-radius: 4px;
 }
 
+/* Google TV / Android TV — larger, high-contrast focus ring visible at 3m */
+@media (navigation: directional) {
+  :focus-visible {
+    outline: 4px solid #fff;
+    outline-offset: 5px;
+    border-radius: 6px;
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.22), 0 0 24px rgba(255, 255, 255, 0.14);
+  }
+
+  /* Larger hit targets for D-pad navigation */
+  .btn, button, a, [tabindex] {
+    min-height: 44px;
+  }
+}
+
 kbd {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.16);

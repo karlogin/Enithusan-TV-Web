@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import type { Movie } from '../types';
 import MovieCard from './MovieCard';
@@ -23,6 +23,26 @@ export default function MovieRow({ title, subtitle, movies, onMoreInfo }: MovieR
     el.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' });
   };
 
+  // D-pad horizontal navigation between cards
+  const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const cards = Array.from(track.querySelectorAll<HTMLElement>('.movie-card-link'));
+    const focused = document.activeElement as HTMLElement;
+    const idx = cards.indexOf(focused);
+    if (idx === -1) return;
+
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      const next = cards[idx + 1];
+      if (next) { next.focus(); next.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' }); }
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const prev = cards[idx - 1];
+      if (prev) { prev.focus(); prev.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' }); }
+    }
+  }, []);
+
   return (
     <section className="movie-row">
       <div className="movie-row-header">
@@ -41,7 +61,7 @@ export default function MovieRow({ title, subtitle, movies, onMoreInfo }: MovieR
         >
           ‹
         </button>
-        <div className="movie-row-track" ref={trackRef}>
+        <div className="movie-row-track" ref={trackRef} onKeyDown={onKeyDown}>
           {movies.map((movie) => (
             <MovieCard key={`${movie.id}-${movie.lang}`} movie={movie} onMoreInfo={onMoreInfo} />
           ))}
