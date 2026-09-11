@@ -97,25 +97,29 @@ export default function VideoPlayer({
     const win = window as any;
 
     const initCast = () => {
-      if (!win.cast?.framework) return;
-      const ctx = win.cast.framework.CastContext.getInstance();
-      ctx.setOptions({
-        receiverApplicationId: 'CC1AD845', // Default Media Receiver
-        autoJoinPolicy: win.cast.framework.AutoJoinPolicy.ORIGIN_SCOPED,
-      });
-      castCtxRef.current = ctx;
+      try {
+        if (!win.cast?.framework) return;
+        const ctx = win.cast.framework.CastContext.getInstance();
+        ctx.setOptions({
+          receiverApplicationId: 'CC1AD845', // Default Media Receiver
+          autoJoinPolicy: win.cast.framework.AutoJoinPolicy.ORIGIN_SCOPED,
+        });
+        castCtxRef.current = ctx;
 
-      const CastState = win.cast.framework.CastState;
-      const EventType = win.cast.framework.CastContextEventType;
+        const CastState = win.cast.framework.CastState;
+        const EventType = win.cast.framework.CastContextEventType;
 
-      ctx.addEventListener(EventType.CAST_STATE_CHANGED, (e: { castState: string }) => {
-        setCastAvailable(e.castState !== CastState.NO_DEVICES_AVAILABLE);
-        setCasting(e.castState === CastState.CONNECTED);
-      });
+        ctx.addEventListener(EventType.CAST_STATE_CHANGED, (e: { castState: string }) => {
+          setCastAvailable(e.castState !== CastState.NO_DEVICES_AVAILABLE);
+          setCasting(e.castState === CastState.CONNECTED);
+        });
 
-      const state = ctx.getCastState();
-      setCastAvailable(state !== CastState.NO_DEVICES_AVAILABLE);
-      setCasting(state === CastState.CONNECTED);
+        const state = ctx.getCastState();
+        setCastAvailable(state !== CastState.NO_DEVICES_AVAILABLE);
+        setCasting(state === CastState.CONNECTED);
+      } catch {
+        // Cast SDK unavailable or blocked — fail silently
+      }
     };
 
     // SDK may already be loaded
