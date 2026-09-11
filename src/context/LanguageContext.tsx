@@ -15,7 +15,7 @@ interface LanguageContextValue {
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
-const STORAGE_KEY = 'einthusan-language';
+const STORAGE_KEY = 'vadai-language';
 
 function readStoredLanguage(): Language {
   const stored = localStorage.getItem(STORAGE_KEY);

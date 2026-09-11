@@ -1,14 +1,16 @@
 {
   "id": "/",
-  "name": "Einthusan TV",
-  "short_name": "Einthusan TV",
+  "name": "Vadai",
+  "short_name": "Vadai",
   "description": "Stream Tamil, Hindi, and Malayalam movies",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "fullscreen"],
   "orientation": "any",
-  "background_color": "#000000",
+  "background_color": "#1a0a02",
   "theme_color": "#000000",
+  "lang": "en",
   "categories": ["entertainment", "video"],
   "icons": [
     {
@@ -28,6 +30,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ]
 }

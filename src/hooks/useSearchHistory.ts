@@ -1,4 +1,4 @@
-const KEY = 'einthusan-search-history';
+const KEY = 'vadai-search-history';
 const MAX = 8;
 
 export function getSearchHistory(): string[] {

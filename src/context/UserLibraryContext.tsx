@@ -35,7 +35,7 @@ function loadLocalLibrary(key: string): UserLibrary {
 export function UserLibraryProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { activeProfile } = useProfile();
-  const storageKey = profileStorageKey('einthusan-library', activeProfile.id);
+  const storageKey = profileStorageKey('vadai-library', activeProfile.id);
   const [library, setLibrary] = useState<UserLibrary>(() => loadLocalLibrary(storageKey));
 
   useEffect(() => {

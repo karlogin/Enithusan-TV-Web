@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { getMe, loginUser, logoutUser, registerUser, setAuthToken } from '../api';
 import type { User } from '../types';
 
-const TOKEN_KEY = 'einthusan-auth-token';
+const TOKEN_KEY = 'vadai-auth-token';
 
 interface AuthContextValue {
   user: User | null;
