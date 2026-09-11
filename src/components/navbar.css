@@ -248,6 +248,13 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* Hide desktop profile menu on mobile — profile lives in tab bar */
+@media (max-width: 768px) {
+  .profile-menu-desktop {
+    display: none;
+  }
+}
+
 /* ── Mobile ──────────────────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {

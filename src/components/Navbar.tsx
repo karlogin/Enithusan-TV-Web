@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import CustomSelect from './CustomSelect';
 import Logo from './Logo';
 import ProfileSwitcher from './ProfileSwitcher';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useSpotlight } from '../context/SpotlightContext';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { LANGUAGES } from '../types';
 import './navbar.css';
@@ -12,18 +13,12 @@ import './navbar.css';
 export default function Navbar() {
   const { language, setLanguage } = useLanguage();
   const { user, logout, loading } = useAuth();
-  const navigate = useNavigate();
-  const searchRef = useRef<HTMLInputElement>(null);
+  const { openSpotlight } = useSpotlight();
   const menuRef = useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [query, setQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
 
-  useKeyboardShortcuts(() => {
-    setSearchOpen(true);
-    searchRef.current?.focus();
-  });
+  useKeyboardShortcuts(openSpotlight);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -42,14 +37,6 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', onClick);
   }, [menuOpen]);
 
-  const submitSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const q = query.trim();
-    if (!q) return;
-    navigate(`/search?q=${encodeURIComponent(q)}`);
-    setSearchOpen(false);
-  };
-
   return (
     <header className={`navbar ${scrolled ? 'scrolled' : ''}`}>
       <div className="navbar-left">
@@ -57,6 +44,7 @@ export default function Navbar() {
         <ul className="navbar-links">
           <li><NavLink to="/" end className={({ isActive }) => (isActive ? 'active' : '')}>Home</NavLink></li>
           <li><NavLink to="/browse" className={({ isActive }) => (isActive ? 'active' : '')}>Browse</NavLink></li>
+          <li><NavLink to="/history" className={({ isActive }) => (isActive ? 'active' : '')}>History</NavLink></li>
           <li><NavLink to="/my-list" className={({ isActive }) => (isActive ? 'active' : '')}>My List</NavLink></li>
         </ul>
       </div>
@@ -64,38 +52,19 @@ export default function Navbar() {
       <div className="navbar-right">
         <ProfileSwitcher />
 
-        <form className="search-form" onSubmit={submitSearch}>
-          <div className={`search-input-wrap ${searchOpen ? 'open' : ''}`}>
-            <input
-              ref={searchRef}
-              className="search-input"
-              type="search"
-              placeholder="Search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              aria-label="Search movies"
-            />
-          </div>
-          <button
-            type="button"
-            className="search-toggle"
-            aria-label="Search"
-            onClick={() => {
-              if (searchOpen && query.trim()) {
-                navigate(`/search?q=${encodeURIComponent(query.trim())}`);
-              } else {
-                setSearchOpen((v) => !v);
-              }
-            }}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
-            </svg>
-          </button>
-        </form>
+        <button
+          type="button"
+          className="search-toggle"
+          aria-label="Search"
+          onClick={openSpotlight}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+          </svg>
+        </button>
 
         {!loading && (
-          <div className="profile-menu" ref={menuRef}>
+          <div className="profile-menu profile-menu-desktop" ref={menuRef}>
             <button
               type="button"
               className="profile-btn"
