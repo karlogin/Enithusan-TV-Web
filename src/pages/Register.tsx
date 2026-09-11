@@ -29,26 +29,53 @@ export default function Register() {
 
   return (
     <div className="auth-page">
-      <div className="auth-card">
+      <div className="auth-brand">
         <Logo />
+      </div>
+      <div className="auth-card">
         <h1>Create Account</h1>
-        <p className="auth-sub">Save your list and continue watching across devices.</p>
+        <p className="auth-sub">Save your watchlist and resume across devices.</p>
         <form onSubmit={submit} className="auth-form">
-          <label>
-            Name
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} required autoComplete="name" />
-          </label>
-          <label>
-            Email
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
-          </label>
-          <label>
-            Password
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} autoComplete="new-password" />
-          </label>
+          <div className="auth-field">
+            <input
+              id="reg-name"
+              type="text"
+              placeholder=" "
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              autoComplete="name"
+            />
+            <label htmlFor="reg-name">Full name</label>
+          </div>
+          <div className="auth-field">
+            <input
+              id="reg-email"
+              type="email"
+              placeholder=" "
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
+            <label htmlFor="reg-email">Email</label>
+          </div>
+          <div className="auth-field">
+            <input
+              id="reg-password"
+              type="password"
+              placeholder=" "
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              autoComplete="new-password"
+            />
+            <label htmlFor="reg-password">Password</label>
+          </div>
           {error && <p className="auth-error">{error}</p>}
           <button type="submit" className="btn btn-primary auth-submit" disabled={loading}>
-            {loading ? 'Creating…' : 'Sign Up'}
+            {loading ? 'Creating account…' : 'Get Started'}
           </button>
         </form>
         <p className="auth-footer">

@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -5,6 +6,7 @@ import { ProfileProvider } from './context/ProfileContext';
 import { UserLibraryProvider } from './context/UserLibraryContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
+import Splash from './components/Splash';
 import TabBar from './components/TabBar';
 import { ToastProvider } from './components/Toast';
 import Home from './pages/Home';
@@ -21,6 +23,10 @@ import About from './pages/About';
 import NotFound from './pages/NotFound';
 import './App.css';
 
+function splashAlreadyDone() {
+  try { return !!sessionStorage.getItem('eithu-splash'); } catch { return true; }
+}
+
 function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="app">
@@ -32,7 +38,15 @@ function AppShell({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(!splashAlreadyDone());
+  const onSplashDone = useCallback(() => {
+    try { sessionStorage.setItem('eithu-splash', '1'); } catch {}
+    setShowSplash(false);
+  }, []);
+
   return (
+    <>
+      {showSplash && <Splash onDone={onSplashDone} />}
     <LanguageProvider>
       <AuthProvider>
         <ProfileProvider>
@@ -68,5 +82,6 @@ export default function App() {
         </ProfileProvider>
       </AuthProvider>
     </LanguageProvider>
+    </>
   );
 }

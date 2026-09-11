@@ -1,51 +1,26 @@
 .logo {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
   text-decoration: none;
   color: inherit;
-}
-
-.logo-mark {
-  width: 30px;
-  height: 30px;
   flex-shrink: 0;
-  filter: drop-shadow(0 2px 8px rgba(10, 132, 255, 0.35));
 }
 
-.logo-compact .logo-mark {
-  width: 28px;
-  height: 28px;
-}
-
-.logo-text {
-  display: flex;
-  align-items: baseline;
-  gap: 0.35rem;
+.logo-wordmark {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.45rem;
+  letter-spacing: -0.045em;
   line-height: 1;
-}
-
-.logo-brand {
-  font-size: 1.2rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
   color: var(--text-primary);
+  transition: opacity 0.15s;
 }
 
-.logo-tag {
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
+.logo:hover .logo-wordmark {
+  opacity: 0.8;
 }
 
-@media (max-width: 768px) {
-  .logo-brand {
-    font-size: 1.15rem;
-  }
-
-  .logo-tag {
-    display: none;
-  }
+.logo-compact .logo-wordmark {
+  font-size: 1.25rem;
 }

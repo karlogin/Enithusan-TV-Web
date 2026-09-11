@@ -70,14 +70,18 @@
   position: relative;
   border-radius: var(--radius-md);
   overflow: visible;
-  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out), z-index 0s;
+  transition:
+    transform 0.38s var(--ease-spring),
+    box-shadow 0.38s var(--ease-spring),
+    z-index 0s;
   cursor: pointer;
+  will-change: transform;
 }
 
 .movie-card:hover {
-  transform: scale(1.06) translateY(-4px);
+  transform: perspective(700px) rotateX(-4deg) translateY(-10px) scale(1.05);
   z-index: 10;
-  box-shadow: var(--shadow-elevated);
+  box-shadow: var(--shadow-card-3d);
 }
 
 .movie-card-link {
