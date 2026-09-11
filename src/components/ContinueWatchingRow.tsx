@@ -32,6 +32,11 @@ export default function ContinueWatchingRow({ items }: ContinueWatchingRowProps)
                 </div>
                 <div className="continue-overlay">
                   <p>{item.title}</p>
+                  {item.duration > 0 && (
+                    <span className="continue-time-left">
+                      {Math.max(1, Math.round((item.duration - item.progress) / 60))}m left
+                    </span>
+                  )}
                 </div>
               </Link>
               <button

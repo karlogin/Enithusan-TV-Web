@@ -154,6 +154,19 @@
   margin: 0 0 0.2rem;
   color: var(--text-primary);
   letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-title::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 1em;
+  background: var(--brand-primary);
+  border-radius: 2px;
+  flex-shrink: 0;
 }
 
 .see-all-link {

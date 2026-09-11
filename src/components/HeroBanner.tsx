@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import MyListButton from './MyListButton';
 import type { Movie } from '../types';
 import { LANGUAGE_LABELS } from '../types';
 import './hero.css';
@@ -117,7 +118,7 @@ export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
           key={`mobile-${movie.id}`}
         />
       )}
-      <div className="hero-content" style={{ transform: `translateY(${scrollY * 0.08}px)` }}>
+      <div className="hero-content" key={movie.id} style={{ transform: `translateY(${scrollY * 0.06}px)` }}>
         <p className="hero-lang">{LANGUAGE_LABELS[movie.lang]}</p>
         <h1 className="hero-title">{movie.title}</h1>
         <div className="hero-meta">
@@ -134,6 +135,7 @@ export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
           <button type="button" className="btn btn-secondary" onClick={() => onMoreInfo(movie)}>
             More Info
           </button>
+          <MyListButton movie={movie} variant="icon" />
         </div>
         {movies.length > 1 && (
           <div className="hero-indicators" role="tablist" aria-label="Featured titles">
