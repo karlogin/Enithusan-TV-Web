@@ -81,6 +81,7 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
             onClick={onClose}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+            {isResumable ? 'Resume' : 'Play'}
           </Link>
         </div>
 
@@ -103,7 +104,12 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
           </div>
 
           {loading ? (
-            <p className="modal-loading">Loading details…</p>
+            <div className="modal-skeleton-body" aria-hidden="true">
+              <div className="modal-skel" style={{ width: '92%', height: '14px', marginTop: '1rem' }} />
+              <div className="modal-skel" style={{ width: '78%', height: '14px', marginTop: '8px' }} />
+              <div className="modal-skel" style={{ width: '55%', height: '14px', marginTop: '8px' }} />
+              <div className="modal-skel" style={{ width: '40%', height: '12px', marginTop: '1.25rem' }} />
+            </div>
           ) : (
             <>
               {d.description && <p className="modal-desc">{d.description}</p>}
