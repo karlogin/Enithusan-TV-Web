@@ -230,23 +230,9 @@
     filter: blur(44px) saturate(1.9) brightness(0.48);
   }
 
-  /* Portrait poster card centered — clear of the navbar + language pills */
+  /* Mobile poster: hidden — blurred backdrop carries the visual identity */
   .hero-poster-mobile {
-    display: block;
-    position: absolute;
-    top: calc(var(--nav-height) + 3rem);
-    left: 50%;
-    transform: translateX(-50%);
-    height: 38%;
-    max-height: 180px;
-    width: auto;
-    max-width: 40%;
-    border-radius: var(--radius-md);
-    box-shadow:
-      0 12px 40px rgba(0, 0, 0, 0.75),
-      0 0 0 1px rgba(255, 255, 255, 0.08);
-    object-fit: cover;
-    z-index: 2;
+    display: none;
   }
 
   /* Content anchored near the bottom with enough clearance from tab bar */
