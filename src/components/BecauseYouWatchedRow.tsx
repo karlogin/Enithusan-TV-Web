@@ -5,7 +5,11 @@ import { useLanguage } from '../context/LanguageContext';
 import { useUserLibrary } from '../context/UserLibraryContext';
 import type { Movie } from '../types';
 
-export default function BecauseYouWatchedRow() {
+interface BecauseYouWatchedRowProps {
+  onMoreInfo?: (movie: Movie) => void;
+}
+
+export default function BecauseYouWatchedRow({ onMoreInfo }: BecauseYouWatchedRowProps) {
   const { language } = useLanguage();
   const { continueWatching } = useUserLibrary();
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -40,6 +44,7 @@ export default function BecauseYouWatchedRow() {
       title={`Because you watched ${seed.title}`}
       subtitle="More titles you might enjoy"
       movies={movies}
+      onMoreInfo={onMoreInfo}
     />
   );
 }

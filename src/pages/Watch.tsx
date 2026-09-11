@@ -76,7 +76,7 @@ export default function Watch() {
       <div className="error-screen">
         <p>{error ?? 'Movie not found'}</p>
         <p style={{ fontSize: '0.85rem', maxWidth: 480, color: 'var(--text-muted)' }}>
-          Einthusan may rate-limit rapid requests. Wait a few seconds and try again.
+          The server may be rate-limiting rapid requests. Wait a few seconds and try again.
         </p>
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
           <button type="button" className="btn btn-secondary" onClick={() => { setMovie(null); setError(null); setRetryCount((c) => c + 1); }}>
