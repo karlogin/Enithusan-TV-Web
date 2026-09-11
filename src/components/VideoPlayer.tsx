@@ -2,12 +2,20 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { proxyStreamUrl } from '../api';
 import './watch.css';
 
+declare global {
+  interface Window {
+    __onGCastApiAvailable?: (isAvailable: boolean) => void;
+    WebKitPlaybackTargetAvailabilityEvent?: unknown;
+  }
+}
+
 type HlsModule = typeof import('hls.js');
 
 interface VideoPlayerProps {
   mp4Url?: string;
   hlsUrl?: string;
   poster?: string;
+  title?: string;
   startTime?: number;
   onProgress?: (progress: number, duration: number) => void;
   onStreamError?: () => Promise<{ mp4Url?: string; hlsUrl?: string } | null>;
@@ -28,6 +36,7 @@ export default function VideoPlayer({
   mp4Url,
   hlsUrl,
   poster,
+  title,
   startTime = 0,
   onProgress,
   onStreamError,
@@ -41,6 +50,17 @@ export default function VideoPlayer({
   const flashTimer = useRef<number | null>(null);
   const refreshAttempt = useRef(0);
   const startTimeRef = useRef(startTime);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const castCtxRef = useRef<any>(null);
+
+  // Touch / input detection — stable, no re-render needed
+  const isTouchDevice = typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0;
+  // AirPlay picker is available in Safari (iOS + macOS). On touch, iOS native
+  // controls expose AirPlay automatically so we only need the custom button on desktop.
+  const supportsAirPlayButton =
+    typeof window !== 'undefined' &&
+    'WebKitPlaybackTargetAvailabilityEvent' in window &&
+    !isTouchDevice;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +78,10 @@ export default function VideoPlayer({
   const [showControls, setShowControls] = useState(true);
   const [centerFlash, setCenterFlash] = useState<'play' | 'pause' | null>(null);
   const [flashKey, setFlashKey] = useState(0);
+  const [castAvailable, setCastAvailable] = useState(false);
+  const [casting, setCasting] = useState(false);
+  const [airPlayActive, setAirPlayActive] = useState(false);
+  const [scrubTooltip, setScrubTooltip] = useState<{ time: number; x: number } | null>(null);
 
   useEffect(() => {
     setSrcMp4(mp4Url);
@@ -67,7 +91,63 @@ export default function VideoPlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mp4Url, hlsUrl]);
 
-  // ── Stream loading (unchanged logic) ────────────────────────────────────────
+  // ── Chromecast initialization ────────────────────────────────────────────────
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const win = window as any;
+
+    const initCast = () => {
+      if (!win.cast?.framework) return;
+      const ctx = win.cast.framework.CastContext.getInstance();
+      ctx.setOptions({
+        receiverApplicationId: 'CC1AD845', // Default Media Receiver
+        autoJoinPolicy: win.cast.framework.AutoJoinPolicy.ORIGIN_SCOPED,
+      });
+      castCtxRef.current = ctx;
+
+      const CastState = win.cast.framework.CastState;
+      const EventType = win.cast.framework.CastContextEventType;
+
+      ctx.addEventListener(EventType.CAST_STATE_CHANGED, (e: { castState: string }) => {
+        setCastAvailable(e.castState !== CastState.NO_DEVICES_AVAILABLE);
+        setCasting(e.castState === CastState.CONNECTED);
+      });
+
+      const state = ctx.getCastState();
+      setCastAvailable(state !== CastState.NO_DEVICES_AVAILABLE);
+      setCasting(state === CastState.CONNECTED);
+    };
+
+    // SDK may already be loaded
+    initCast();
+
+    // Or wait for the async load callback
+    const prev = win.__onGCastApiAvailable;
+    win.__onGCastApiAvailable = (isAvailable: boolean) => {
+      if (isAvailable) initCast();
+      prev?.(isAvailable);
+    };
+  }, []);
+
+  // ── AirPlay active-state tracking ───────────────────────────────────────────
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !supportsAirPlayButton) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const onAvailChange = (e: any) => {
+      if (e.availability === 'available') return; // devices found, button visible
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const onTargetChange = () => setAirPlayActive(!!(video as any).webkitCurrentPlaybackTargetIsWireless);
+    video.addEventListener('webkitplaybacktargetavailabilitychanged', onAvailChange);
+    video.addEventListener('webkitcurrentplaybacktargetisairplaychanged', onTargetChange);
+    return () => {
+      video.removeEventListener('webkitplaybacktargetavailabilitychanged', onAvailChange);
+      video.removeEventListener('webkitcurrentplaybacktargetisairplaychanged', onTargetChange);
+    };
+  }, [supportsAirPlayButton]);
+
+  // ── Stream loading ───────────────────────────────────────────────────────────
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -197,7 +277,7 @@ export default function VideoPlayer({
     };
   }, [onProgress]);
 
-  // ── Controls state sync with video element ───────────────────────────────────
+  // ── Controls state sync ──────────────────────────────────────────────────────
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -237,9 +317,6 @@ export default function VideoPlayer({
   useEffect(() => {
     const video = videoRef.current;
     const onFSChange = () => setIsFullscreen(!!document.fullscreenElement);
-    // iOS Safari doesn't support the standard Fullscreen API on arbitrary
-    // elements, only its own non-standard fullscreen mode on <video> itself,
-    // which fires these events instead of "fullscreenchange".
     const onIosEnter = () => setIsFullscreen(true);
     const onIosExit = () => setIsFullscreen(false);
     document.addEventListener('fullscreenchange', onFSChange);
@@ -313,8 +390,6 @@ export default function VideoPlayer({
       webkitDisplayingFullscreen?: boolean;
     };
 
-    // iOS Safari has no Fullscreen API support for a container <div> -- only
-    // the <video> element itself can go fullscreen, via this non-standard API.
     if (!container.requestFullscreen && videoIos.webkitEnterFullscreen) {
       if (videoIos.webkitDisplayingFullscreen) {
         videoIos.webkitExitFullscreen?.();
@@ -331,28 +406,77 @@ export default function VideoPlayer({
     }
   }, []);
 
+  // ── AirPlay ──────────────────────────────────────────────────────────────────
+  const triggerAirPlay = useCallback(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (videoRef.current as any)?.webkitShowPlaybackTargetPicker?.();
+  }, []);
+
+  // ── Chromecast ───────────────────────────────────────────────────────────────
+  const toggleCast = useCallback(() => {
+    const ctx = castCtxRef.current;
+    if (!ctx) return;
+
+    if (casting) {
+      ctx.endCurrentSession(true);
+      return;
+    }
+
+    const video = videoRef.current;
+    const currentPos = video?.currentTime || 0;
+
+    ctx.requestSession().then(() => {
+      const session = ctx.getCurrentSession();
+      if (!session) return;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cast = (window as any).chrome?.cast;
+      if (!cast) return;
+
+      const url = srcMp4 || (srcHls ? proxyStreamUrl(srcHls) : null);
+      if (!url) return;
+
+      const mediaInfo = new cast.media.MediaInfo(
+        url,
+        srcMp4 ? 'video/mp4' : 'application/x-mpegURL'
+      );
+
+      const metadata = new cast.media.GenericMediaMetadata();
+      metadata.title = title || '';
+      if (poster) metadata.images = [{ url: poster }];
+      mediaInfo.metadata = metadata;
+
+      const req = new cast.media.LoadRequest(mediaInfo);
+      req.currentTime = currentPos;
+
+      session.loadMedia(req).then(() => {
+        video?.pause();
+      }).catch(() => undefined);
+    }).catch(() => undefined);
+  }, [casting, srcMp4, srcHls, title, poster]);
+
   // ── Progress bar scrubbing ───────────────────────────────────────────────────
-  const getTimeFromMouseX = useCallback((clientX: number): number => {
+  const getTimeFromX = useCallback((clientX: number): number => {
     const bar = progressRef.current;
     if (!bar || !duration) return 0;
     const rect = bar.getBoundingClientRect();
-    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    return ratio * duration;
+    return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)) * duration;
   }, [duration]);
 
   const startScrub = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     scrubbing.current = true;
     const video = videoRef.current;
-    if (video) video.currentTime = getTimeFromMouseX(e.clientX);
+    if (video) video.currentTime = getTimeFromX(e.clientX);
 
     const onMove = (ev: MouseEvent) => {
       const v = videoRef.current;
       if (!scrubbing.current || !v) return;
-      v.currentTime = getTimeFromMouseX(ev.clientX);
+      v.currentTime = getTimeFromX(ev.clientX);
     };
     const onUp = () => {
       scrubbing.current = false;
+      setScrubTooltip(null);
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
       revealControls();
@@ -360,7 +484,22 @@ export default function VideoPlayer({
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
     revealControls();
-  }, [getTimeFromMouseX, revealControls]);
+  }, [getTimeFromX, revealControls]);
+
+  const onProgressMouseMove = useCallback((e: React.MouseEvent) => {
+    const bar = progressRef.current;
+    if (!bar || !duration) return;
+    const rect = bar.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const x = e.clientX - rect.left;
+    // Clamp tooltip so it doesn't overflow the bar edges
+    const clampedX = Math.max(20, Math.min(rect.width - 20, x));
+    setScrubTooltip({ time: ratio * duration, x: clampedX });
+  }, [duration]);
+
+  const onProgressMouseLeave = useCallback(() => {
+    if (!scrubbing.current) setScrubTooltip(null);
+  }, []);
 
   // ── Keyboard shortcuts ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -428,18 +567,20 @@ export default function VideoPlayer({
   return (
     <div
       ref={containerRef}
-      className={`vp-root ${showControls || paused ? 'vp-controls-visible' : ''}`}
-      onMouseMove={revealControls}
+      className={`vp-root ${!isTouchDevice && (showControls || paused) ? 'vp-controls-visible' : ''}`}
+      onMouseMove={!isTouchDevice ? revealControls : undefined}
       onMouseLeave={() => {
-        if (!paused && !scrubbing.current) setShowControls(false);
+        if (!isTouchDevice && !paused && !scrubbing.current) setShowControls(false);
       }}
     >
+      {/* Video element — native controls on touch; custom controls on desktop */}
       <video
         ref={videoRef}
         playsInline
+        controls={isTouchDevice}
         poster={poster}
-        onClick={togglePlay}
-        onDoubleClick={toggleFullscreen}
+        onClick={!isTouchDevice ? togglePlay : undefined}
+        onDoubleClick={!isTouchDevice ? toggleFullscreen : undefined}
       />
 
       {/* Loading spinner */}
@@ -449,143 +590,197 @@ export default function VideoPlayer({
         </div>
       )}
 
-      {/* Center flash icon */}
-      {centerFlash && (
-        <div className="vp-center-flash" key={flashKey}>
-          {centerFlash === 'play' ? (
-            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-          ) : (
-            <svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
-          )}
-        </div>
+      {/* Chromecast floating button — shown on all platforms when Cast is available.
+          On mobile this sits above the native controls; on desktop it's also in vp-right. */}
+      {castAvailable && isTouchDevice && (
+        <button
+          type="button"
+          className={`vp-cast-float ${casting ? 'active' : ''}`}
+          onClick={toggleCast}
+          aria-label={casting ? 'Stop casting' : 'Cast to TV'}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 3H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11z" />
+          </svg>
+        </button>
       )}
 
-      {/* Controls overlay */}
-      <div className="vp-controls">
-        {/* Progress bar */}
-        <div
-          ref={progressRef}
-          className="vp-progress"
-          onMouseDown={startScrub}
-        >
-          <div className="vp-progress-track">
-            <div className="vp-progress-buffered" style={{ width: `${bufferedPct}%` }} />
-            <div className="vp-progress-played" style={{ width: `${playedPct}%` }}>
-              <div className="vp-progress-thumb" />
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom buttons */}
-        <div className="vp-bottom">
-          {/* Left controls */}
-          <div className="vp-left">
-            <button
-              type="button"
-              className="vp-btn"
-              onClick={togglePlay}
-              aria-label={paused ? 'Play' : 'Pause'}
-            >
-              {paused ? (
+      {/* Custom controls — desktop only */}
+      {!isTouchDevice && (
+        <>
+          {/* Center play/pause flash */}
+          {centerFlash && (
+            <div className="vp-center-flash" key={flashKey}>
+              {centerFlash === 'play' ? (
                 <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
               ) : (
                 <svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
               )}
-            </button>
+            </div>
+          )}
 
-            <button
-              type="button"
-              className="vp-btn vp-btn-skip"
-              onClick={() => skip(-10)}
-              aria-label="Rewind 10 seconds"
+          <div className="vp-controls">
+            {/* Progress bar */}
+            <div
+              ref={progressRef}
+              className="vp-progress"
+              onMouseDown={startScrub}
+              onMouseMove={onProgressMouseMove}
+              onMouseLeave={onProgressMouseLeave}
             >
-              <svg viewBox="0 0 24 24">
-                <path d="M12.5 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7V3z" />
-                <path d="M12.5 1L8.5 5l4 4V1z" />
-                <text x="12" y="14" textAnchor="middle" fontSize="6" fill="currentColor" fontWeight="bold">10</text>
-              </svg>
-            </button>
-
-            <button
-              type="button"
-              className="vp-btn vp-btn-skip"
-              onClick={() => skip(10)}
-              aria-label="Forward 10 seconds"
-            >
-              <svg viewBox="0 0 24 24">
-                <path d="M11.5 3a9 9 0 1 1-9 9h2a7 7 0 1 0 7-7V3z" />
-                <path d="M11.5 1l4 4-4 4V1z" />
-                <text x="12" y="14" textAnchor="middle" fontSize="6" fill="currentColor" fontWeight="bold">10</text>
-              </svg>
-            </button>
-
-            {/* Volume */}
-            <div className="vp-volume">
-              <button
-                type="button"
-                className="vp-btn"
-                onClick={toggleMute}
-                aria-label={muted ? 'Unmute' : 'Mute'}
-              >
-                {volIcon === 'muted' && (
-                  <svg viewBox="0 0 24 24">
-                    <path d="M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0 0 21 12c0-4.28-3-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06A8.99 8.99 0 0 0 17.73 18L19 19.27 20.27 18 5.27 3 4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
-                  </svg>
-                )}
-                {volIcon === 'low' && (
-                  <svg viewBox="0 0 24 24">
-                    <path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z" />
-                  </svg>
-                )}
-                {volIcon === 'high' && (
-                  <svg viewBox="0 0 24 24">
-                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
-                  </svg>
-                )}
-              </button>
-              <div className="vp-volume-slider-wrap">
-                <input
-                  type="range"
-                  className="vp-volume-slider"
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  value={muted ? 0 : volume}
-                  onChange={(e) => changeVolume(Number(e.target.value))}
-                  aria-label="Volume"
-                />
+              {scrubTooltip && (
+                <div className="vp-scrub-tooltip" style={{ left: scrubTooltip.x }}>
+                  {formatTime(scrubTooltip.time)}
+                </div>
+              )}
+              <div className="vp-progress-track">
+                <div className="vp-progress-buffered" style={{ width: `${bufferedPct}%` }} />
+                <div className="vp-progress-played" style={{ width: `${playedPct}%` }}>
+                  <div className="vp-progress-thumb" />
+                </div>
               </div>
             </div>
 
-            {/* Time display */}
-            <span className="vp-time">
-              {formatTime(currentTime)}
-              <span className="vp-time-sep"> / </span>
-              {formatTime(duration)}
-            </span>
-          </div>
+            {/* Bottom buttons */}
+            <div className="vp-bottom">
+              <div className="vp-left">
+                <button
+                  type="button"
+                  className="vp-btn"
+                  onClick={togglePlay}
+                  aria-label={paused ? 'Play' : 'Pause'}
+                >
+                  {paused ? (
+                    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
+                  )}
+                </button>
 
-          {/* Right controls */}
-          <div className="vp-right">
-            <button
-              type="button"
-              className="vp-btn"
-              onClick={toggleFullscreen}
-              aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-            >
-              {isFullscreen ? (
-                <svg viewBox="0 0 24 24">
-                  <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24">
-                  <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
-                </svg>
-              )}
-            </button>
+                <button
+                  type="button"
+                  className="vp-btn vp-btn-skip"
+                  onClick={() => skip(-10)}
+                  aria-label="Rewind 10 seconds"
+                >
+                  <svg viewBox="0 0 24 24">
+                    <path d="M12.5 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7V3z" />
+                    <path d="M12.5 1L8.5 5l4 4V1z" />
+                    <text x="12" y="14" textAnchor="middle" fontSize="6" fill="currentColor" fontWeight="bold">10</text>
+                  </svg>
+                </button>
+
+                <button
+                  type="button"
+                  className="vp-btn vp-btn-skip"
+                  onClick={() => skip(10)}
+                  aria-label="Forward 10 seconds"
+                >
+                  <svg viewBox="0 0 24 24">
+                    <path d="M11.5 3a9 9 0 1 1-9 9h2a7 7 0 1 0 7-7V3z" />
+                    <path d="M11.5 1l4 4-4 4V1z" />
+                    <text x="12" y="14" textAnchor="middle" fontSize="6" fill="currentColor" fontWeight="bold">10</text>
+                  </svg>
+                </button>
+
+                {/* Volume */}
+                <div className="vp-volume">
+                  <button
+                    type="button"
+                    className="vp-btn"
+                    onClick={toggleMute}
+                    aria-label={muted ? 'Unmute' : 'Mute'}
+                  >
+                    {volIcon === 'muted' && (
+                      <svg viewBox="0 0 24 24">
+                        <path d="M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0 0 21 12c0-4.28-3-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06A8.99 8.99 0 0 0 17.73 18L19 19.27 20.27 18 5.27 3 4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+                      </svg>
+                    )}
+                    {volIcon === 'low' && (
+                      <svg viewBox="0 0 24 24">
+                        <path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z" />
+                      </svg>
+                    )}
+                    {volIcon === 'high' && (
+                      <svg viewBox="0 0 24 24">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+                      </svg>
+                    )}
+                  </button>
+                  <div className="vp-volume-slider-wrap">
+                    <input
+                      type="range"
+                      className="vp-volume-slider"
+                      min={0}
+                      max={1}
+                      step={0.05}
+                      value={muted ? 0 : volume}
+                      onChange={(e) => changeVolume(Number(e.target.value))}
+                      aria-label="Volume"
+                    />
+                  </div>
+                </div>
+
+                {/* Time display */}
+                <span className="vp-time">
+                  {formatTime(currentTime)}
+                  <span className="vp-time-sep"> / </span>
+                  {formatTime(duration)}
+                </span>
+              </div>
+
+              <div className="vp-right">
+                {/* AirPlay — Safari desktop only */}
+                {supportsAirPlayButton && (
+                  <button
+                    type="button"
+                    className={`vp-btn ${airPlayActive ? 'vp-btn-active' : ''}`}
+                    onClick={triggerAirPlay}
+                    aria-label={airPlayActive ? 'AirPlay active' : 'AirPlay'}
+                    title="AirPlay"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M12 17l4-4H8l4 4zM21 3H3C1.9 3 1 3.9 1 5v12c0 1.1.9 2 2 2h4v-2H3V5h18v12h-4v2h4c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" />
+                    </svg>
+                  </button>
+                )}
+
+                {/* Chromecast — Chrome with Cast extension */}
+                {castAvailable && (
+                  <button
+                    type="button"
+                    className={`vp-btn ${casting ? 'vp-btn-active' : ''}`}
+                    onClick={toggleCast}
+                    aria-label={casting ? 'Stop casting' : 'Cast to TV'}
+                    title="Cast to TV"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M21 3H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11z" />
+                    </svg>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className="vp-btn"
+                  onClick={toggleFullscreen}
+                  aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                >
+                  {isFullscreen ? (
+                    <svg viewBox="0 0 24 24">
+                      <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24">
+                      <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }

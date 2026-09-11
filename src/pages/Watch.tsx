@@ -104,6 +104,7 @@ export default function Watch() {
             mp4Url={movie.mp4Url}
             hlsUrl={movie.hlsUrl}
             poster={movie.poster}
+            title={movie.title}
             startTime={startTime}
             onProgress={(progress, duration) => updateProgress(movie, progress, duration)}
             onStreamError={onStreamError}
