@@ -51,6 +51,17 @@ export default function Watch() {
     };
   }, [id, lang, retryCount]);
 
+  // Back key (Escape) for Google TV remote — only when not in fullscreen
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !document.fullscreenElement) {
+        navigate(-1);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [navigate]);
+
   const onStreamError = useCallback(async () => {
     if (!id) return null;
     try {
