@@ -1,13 +1,13 @@
 :root {
   /* Brand */
-  --brand-primary: #0a84ff;
-  --brand-primary-hover: #3aa0ff;
+  --brand-primary: #D4852A;
+  --brand-primary-hover: #E09A42;
   --brand-accent: #ff453a;
-  --brand-gradient: linear-gradient(135deg, #0a84ff 0%, #6c5ce7 100%);
+  --brand-gradient: linear-gradient(135deg, #D4852A 0%, #6B380A 100%);
 
-  /* Surfaces — deeper, truer blacks */
-  --bg-primary: #000000;
-  --bg-secondary: #0a0a0a;
+  /* Surfaces — near-black with subtle warmth for depth hierarchy */
+  --bg-primary: #080806;
+  --bg-secondary: #0e0d0b;
   --bg-elevated: #111111;
   --bg-card: #111111;
   --glass-surface: rgba(16, 16, 16, 0.82);
@@ -72,12 +72,14 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+  touch-action: manipulation;
 }
 
 button,
 input,
 select {
   font: inherit;
+  touch-action: manipulation;
 }
 
 button {
@@ -97,7 +99,7 @@ img {
 }
 
 :focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline: 2px solid #F5C46A;
   outline-offset: 2px;
   border-radius: 4px;
 }

@@ -65,14 +65,14 @@
     linear-gradient(to right, rgba(0,0,0,0.55) 0%, transparent 60%);
 }
 
-/* Close button */
+/* Close button — 44×44 minimum touch target */
 .modal-close {
   position: absolute;
-  top: 0.85rem;
-  right: 0.85rem;
+  top: 0.65rem;
+  right: 0.65rem;
   z-index: 3;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: rgba(20, 20, 20, 0.72);
   backdrop-filter: blur(12px);

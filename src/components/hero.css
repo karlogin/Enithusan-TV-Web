@@ -174,7 +174,7 @@
   height: 2px;
   width: 0%;
   border-radius: var(--radius-pill);
-  background: #fff;
+  background: #F5C46A;
   position: relative;
   z-index: 1;
 }
@@ -201,6 +201,17 @@
   .hero-content {
     max-width: 100%;
     right: 4%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-backdrop--fill {
+    animation: none;
+    opacity: 1;
+  }
+  .hero-indicator-btn.active .hero-indicator-fill {
+    animation: none;
+    width: 100%;
   }
 }
 
