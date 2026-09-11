@@ -7,18 +7,18 @@
   flex-shrink: 0;
 }
 
-.logo-vada-icon {
+.logo-vadai-icon {
   width: 28px;
   height: 28px;
   flex-shrink: 0;
   transition: transform 0.2s var(--ease-spring);
 }
 
-.logo:hover .logo-vada-icon {
+.logo:hover .logo-vadai-icon {
   transform: rotate(-8deg) scale(1.08);
 }
 
-.logo-compact .logo-vada-icon {
+.logo-compact .logo-vadai-icon {
   width: 24px;
   height: 24px;
 }

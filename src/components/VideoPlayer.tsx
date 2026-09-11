@@ -351,8 +351,8 @@ export default function VideoPlayer({
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
     navigator.mediaSession.metadata = new MediaMetadata({
-      title: title ?? 'Vada',
-      artist: 'Vada · வடை',
+      title: title ?? 'Vadai',
+      artist: 'Vadai · வடை',
       artwork: poster ? [{ src: poster, sizes: '512x512', type: 'image/jpeg' }] : [],
     });
   }, [title, poster]);
