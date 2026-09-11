@@ -50,9 +50,16 @@ export interface User {
   name: string;
 }
 
+export interface HistoryItem extends Movie {
+  watchedAt: number;
+  progress?: number;
+  duration?: number;
+}
+
 export interface UserLibrary {
   myList: Movie[];
   continueWatching: ContinueWatchingItem[];
+  history?: HistoryItem[];
 }
 
 export const LANGUAGES: { value: Language; label: string }[] = [
