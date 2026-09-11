@@ -24,7 +24,7 @@ import NotFound from './pages/NotFound';
 import './App.css';
 
 function splashAlreadyDone() {
-  try { return !!sessionStorage.getItem('vada-splash'); } catch { return true; }
+  try { return !!sessionStorage.getItem('vadai-splash'); } catch { return true; }
 }
 
 function AppShell({ children }: { children: React.ReactNode }) {
@@ -40,7 +40,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
 export default function App() {
   const [showSplash, setShowSplash] = useState(!splashAlreadyDone());
   const onSplashDone = useCallback(() => {
-    try { sessionStorage.setItem('vada-splash', '1'); } catch {}
+    try { sessionStorage.setItem('vadai-splash', '1'); } catch {}
     setShowSplash(false);
   }, []);
 

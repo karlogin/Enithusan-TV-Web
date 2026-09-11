@@ -67,7 +67,7 @@ export default function Login() {
         <p className="auth-footer">
           <Link to="/forgot-password">Forgot password?</Link>
           <br />
-          New to Vada? <Link to="/register">Create an account</Link>
+          New to Vadai? <Link to="/register">Create an account</Link>
         </p>
       </div>
     </div>
