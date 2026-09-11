@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { searchMovies } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import MovieCard from '../components/MovieCard';
+import MovieModal from '../components/MovieModal';
 import { SkeletonPage } from '../components/Skeleton';
 import { addSearchHistory, clearSearchHistory, getSearchHistory } from '../hooks/useSearchHistory';
 import type { Movie } from '../types';
@@ -17,6 +18,7 @@ export default function Search() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<string[]>(getSearchHistory);
+  const [modalMovie, setModalMovie] = useState<Movie | null>(null);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -95,7 +97,7 @@ export default function Search() {
         {!loading && results.length > 0 && (
           <div className="browse-grid">
             {results.map((movie) => (
-              <MovieCard key={movie.id} movie={movie} />
+              <MovieCard key={movie.id} movie={movie} onMoreInfo={setModalMovie} />
             ))}
           </div>
         )}
@@ -107,6 +109,7 @@ export default function Search() {
           </div>
         )}
       </div>
+      {modalMovie && <MovieModal movie={modalMovie} onClose={() => setModalMovie(null)} />}
     </div>
   );
 }

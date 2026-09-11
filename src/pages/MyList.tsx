@@ -1,10 +1,14 @@
+import { useState } from 'react';
 import MovieCard from '../components/MovieCard';
+import MovieModal from '../components/MovieModal';
 import { exportLibrary } from '../utils/libraryExport';
 import { useUserLibrary } from '../context/UserLibraryContext';
+import type { Movie } from '../types';
 import '../components/movies.css';
 
 export default function MyList() {
   const { myList, continueWatching } = useUserLibrary();
+  const [modalMovie, setModalMovie] = useState<Movie | null>(null);
 
   return (
     <div className="page">
@@ -35,11 +39,12 @@ export default function MyList() {
         ) : (
           <div className="browse-grid">
             {myList.map((movie) => (
-              <MovieCard key={movie.id} movie={movie} />
+              <MovieCard key={movie.id} movie={movie} onMoreInfo={setModalMovie} />
             ))}
           </div>
         )}
       </div>
+      {modalMovie && <MovieModal movie={modalMovie} onClose={() => setModalMovie(null)} />}
     </div>
   );
 }

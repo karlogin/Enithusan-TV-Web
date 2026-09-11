@@ -248,10 +248,42 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* Mobile language pills — hidden on desktop */
+.mobile-lang-pills {
+  display: none;
+}
+
 /* Hide desktop profile menu on mobile — profile lives in tab bar */
 @media (max-width: 768px) {
   .profile-menu-desktop {
     display: none;
+  }
+
+  .mobile-lang-pills {
+    display: flex;
+    gap: 0.18rem;
+    align-items: center;
+  }
+
+  .mobile-lang-pill {
+    font-size: 0.69rem;
+    font-weight: 500;
+    padding: 0.22rem 0.58rem;
+    border-radius: var(--radius-pill);
+    color: var(--text-muted);
+    border: 1px solid transparent;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+
+  .mobile-lang-pill.active {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+
+  .mobile-lang-pill:hover {
+    color: var(--text-secondary);
   }
 }
 

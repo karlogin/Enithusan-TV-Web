@@ -41,6 +41,19 @@ export default function Navbar() {
     <header className={`navbar ${scrolled ? 'scrolled' : ''}`}>
       <div className="navbar-left">
         <Logo />
+        {/* Mobile-only language switcher */}
+        <div className="mobile-lang-pills">
+          {LANGUAGES.map(({ value, label }) => (
+            <button
+              key={value}
+              type="button"
+              className={`mobile-lang-pill ${language === value ? 'active' : ''}`}
+              onClick={() => setLanguage(value)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         <ul className="navbar-links">
           <li><NavLink to="/" end className={({ isActive }) => (isActive ? 'active' : '')}>Home</NavLink></li>
           <li><NavLink to="/browse" className={({ isActive }) => (isActive ? 'active' : '')}>Browse</NavLink></li>

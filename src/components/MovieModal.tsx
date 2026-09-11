@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getMovie } from '../api';
 import MyListButton from './MyListButton';
+import { useUserLibrary } from '../context/UserLibraryContext';
 import type { Movie, MovieDetails } from '../types';
 import { LANGUAGE_LABELS } from '../types';
 import './modal.css';
@@ -31,6 +32,9 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
   const [details, setDetails] = useState<MovieDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const panelRef = useRef<HTMLDivElement>(null);
+  const { continueWatching } = useUserLibrary();
+  const savedProgress = continueWatching.find((c) => c.id === movie.id);
+  const isResumable = !!(savedProgress && savedProgress.progress > 0);
 
   useEffect(() => {
     let cancelled = false;
@@ -119,7 +123,7 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
           <div className="modal-actions">
             <Link to={`/watch/${d.id}?lang=${d.lang}`} className="btn btn-play modal-play-btn" onClick={onClose}>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
-              Play
+              {isResumable ? 'Resume' : 'Play'}
             </Link>
             <MyListButton movie={d} />
           </div>

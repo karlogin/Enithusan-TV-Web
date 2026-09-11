@@ -16,6 +16,7 @@ export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
   const [tickKey, setTickKey] = useState(0);
   const [scrollY, setScrollY] = useState(0);
   const timerRef = useRef<number | null>(null);
+  const touchStartX = useRef(0);
   const movie = movies[index] ?? movies[0];
 
   useEffect(() => {
@@ -66,8 +67,28 @@ export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
 
   const parallax = scrollY * 0.22;
 
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) > 48) {
+      const next = dx < 0
+        ? (index + 1) % movies.length
+        : (index - 1 + movies.length) % movies.length;
+      goTo(next);
+    }
+  };
+
   return (
-    <section className="hero" aria-label="Featured titles" aria-live="polite" aria-atomic="true">
+    <section
+      className="hero"
+      aria-label="Featured titles"
+      aria-live="polite"
+      aria-atomic="true"
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
       <div
         className="hero-backdrop hero-backdrop--fill"
         style={{
@@ -76,6 +97,7 @@ export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
         }}
         key={movie.id}
       />
+      {/* Desktop: poster inset right side */}
       {movie.poster && (
         <img
           className="hero-poster-inset"
@@ -83,6 +105,16 @@ export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
           alt=""
           aria-hidden="true"
           style={{ transform: `translateY(calc(-50% + ${scrollY * -0.06}px))` }}
+        />
+      )}
+      {/* Mobile: poster card centered at top */}
+      {movie.poster && (
+        <img
+          className="hero-poster-mobile"
+          src={movie.poster}
+          alt=""
+          aria-hidden="true"
+          key={`mobile-${movie.id}`}
         />
       )}
       <div className="hero-content" style={{ transform: `translateY(${scrollY * 0.08}px)` }}>

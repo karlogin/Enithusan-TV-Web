@@ -3,6 +3,7 @@ import { getBrowseMore, getHome } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import CustomSelect from '../components/CustomSelect';
 import MovieCard from '../components/MovieCard';
+import MovieModal from '../components/MovieModal';
 import { SkeletonPage } from '../components/Skeleton';
 import type { Movie } from '../types';
 import '../components/profile.css';
@@ -18,6 +19,7 @@ export default function Browse() {
   const [error, setError] = useState<string | null>(null);
   const [uhdOnly, setUhdOnly] = useState(false);
   const [yearFilter, setYearFilter] = useState('');
+  const [modalMovie, setModalMovie] = useState<Movie | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -170,12 +172,13 @@ export default function Browse() {
         </div>
         <div className="browse-grid">
           {visible.map((movie) => (
-            <MovieCard key={movie.id} movie={movie} />
+            <MovieCard key={movie.id} movie={movie} onMoreInfo={setModalMovie} />
           ))}
         </div>
         {canLoadMore && <div ref={sentinelRef} className="browse-sentinel" />}
         {fetchingMore && <p className="browse-loading-more">Loading more…</p>}
       </div>
+      {modalMovie && <MovieModal movie={modalMovie} onClose={() => setModalMovie(null)} />}
     </div>
   );
 }
