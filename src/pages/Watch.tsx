@@ -16,7 +16,7 @@ export default function Watch() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { language: globalLang } = useLanguage();
-  const { continueWatching, updateProgress } = useUserLibrary();
+  const { continueWatching, updateProgress, addToHistory } = useUserLibrary();
   const rawLang = searchParams.get('lang') as Language | null;
   const lang = rawLang && VALID_LANGS.has(rawLang) ? rawLang : globalLang;
 
@@ -117,7 +117,10 @@ export default function Watch() {
             poster={movie.poster}
             title={movie.title}
             startTime={startTime}
-            onProgress={(progress, duration) => updateProgress(movie, progress, duration)}
+            onProgress={(progress, duration) => {
+              updateProgress(movie, progress, duration);
+              if (progress >= 30) addToHistory(movie, progress, duration);
+            }}
             onStreamError={onStreamError}
           />
         ) : (

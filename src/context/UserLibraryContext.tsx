@@ -2,15 +2,18 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { getUserLibrary, saveUserLibrary } from '../api';
 import { profileStorageKey, useProfile } from './ProfileContext';
 import { useAuth } from './AuthContext';
-import type { ContinueWatchingItem, Movie, UserLibrary } from '../types';
+import type { ContinueWatchingItem, HistoryItem, Movie, UserLibrary } from '../types';
 
 interface UserLibraryContextValue {
   myList: Movie[];
   continueWatching: ContinueWatchingItem[];
+  history: HistoryItem[];
   isInMyList: (id: string) => boolean;
   toggleMyList: (movie: Movie) => void;
   updateProgress: (movie: Movie, progress: number, duration: number) => void;
   removeFromContinueWatching: (id: string) => void;
+  addToHistory: (movie: Movie, progress?: number, duration?: number) => void;
+  clearHistory: () => void;
   importLibrary: (data: UserLibrary) => void;
 }
 
@@ -19,11 +22,14 @@ const UserLibraryContext = createContext<UserLibraryContextValue | null>(null);
 function loadLocalLibrary(key: string): UserLibrary {
   try {
     const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw) as UserLibrary;
+    if (raw) {
+      const parsed = JSON.parse(raw) as UserLibrary;
+      return { ...parsed, history: parsed.history ?? [] };
+    }
   } catch {
     /* ignore */
   }
-  return { myList: [], continueWatching: [] };
+  return { myList: [], continueWatching: [], history: [] };
 }
 
 export function UserLibraryProvider({ children }: { children: React.ReactNode }) {
@@ -111,11 +117,25 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
     [library, persist],
   );
 
+  const addToHistory = useCallback(
+    (movie: Movie, progress?: number, duration?: number) => {
+      const item: HistoryItem = { ...movie, watchedAt: Date.now(), progress, duration };
+      const rest = (library.history ?? []).filter((m) => m.id !== movie.id);
+      persist({ ...library, history: [item, ...rest].slice(0, 200) });
+    },
+    [library, persist],
+  );
+
+  const clearHistory = useCallback(() => {
+    persist({ ...library, history: [] });
+  }, [library, persist]);
+
   const importLibrary = useCallback(
     (data: UserLibrary) => {
       persist({
         myList: mergeMovies(library.myList, data.myList),
         continueWatching: mergeContinue(library.continueWatching, data.continueWatching),
+        history: mergeHistory(library.history ?? [], data.history ?? []),
       });
     },
     [library, persist],
@@ -125,13 +145,16 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
     () => ({
       myList: library.myList,
       continueWatching: library.continueWatching,
+      history: library.history ?? [],
       isInMyList,
       toggleMyList,
       updateProgress,
       removeFromContinueWatching,
+      addToHistory,
+      clearHistory,
       importLibrary,
     }),
-    [library, isInMyList, toggleMyList, updateProgress, removeFromContinueWatching, importLibrary],
+    [library, isInMyList, toggleMyList, updateProgress, removeFromContinueWatching, addToHistory, clearHistory, importLibrary],
   );
 
   return (
@@ -143,6 +166,15 @@ function mergeMovies(a: Movie[], b: Movie[]): Movie[] {
   const map = new Map<string, Movie>();
   [...a, ...b].forEach((m) => map.set(m.id, m));
   return [...map.values()];
+}
+
+function mergeHistory(a: HistoryItem[], b: HistoryItem[]): HistoryItem[] {
+  const map = new Map<string, HistoryItem>();
+  [...a, ...b].forEach((m) => {
+    const existing = map.get(m.id);
+    if (!existing || m.watchedAt > existing.watchedAt) map.set(m.id, m);
+  });
+  return [...map.values()].sort((x, y) => y.watchedAt - x.watchedAt).slice(0, 200);
 }
 
 function mergeContinue(a: ContinueWatchingItem[], b: ContinueWatchingItem[]): ContinueWatchingItem[] {

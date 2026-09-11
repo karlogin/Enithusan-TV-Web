@@ -10,7 +10,8 @@
 
 @media (max-width: 768px) {
   #main-content {
-    padding-bottom: calc(58px + env(safe-area-inset-bottom));
+    /* tab bar floats with 0.75rem bottom margin + ~72px height + safe area */
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   }
 }
 

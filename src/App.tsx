@@ -18,6 +18,7 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import MyList from './pages/MyList';
+import History from './pages/History';
 import Account from './pages/Account';
 import About from './pages/About';
 import NotFound from './pages/NotFound';
@@ -67,6 +68,7 @@ export default function App() {
                       <Route path="/browse" element={<Browse />} />
                       <Route path="/search" element={<Search />} />
                       <Route path="/my-list" element={<MyList />} />
+                      <Route path="/history" element={<History />} />
                       <Route path="/account" element={<Account />} />
                       <Route path="/about" element={<About />} />
                       <Route path="/watch/:id" element={<Watch />} />

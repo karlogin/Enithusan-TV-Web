@@ -259,6 +259,27 @@
     gap: 0.3rem;
   }
 
+  .search-toggle {
+    width: 44px;
+    height: 44px;
+  }
+
+  .search-toggle svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .profile-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 0.9rem;
+  }
+
+  .profile-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
   .search-input-wrap.open {
     max-width: 140px;
   }
