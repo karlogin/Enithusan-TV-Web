@@ -67,7 +67,7 @@ export default function Login() {
         <p className="auth-footer">
           <Link to="/forgot-password">Forgot password?</Link>
           <br />
-          New to Eithu? <Link to="/register">Create an account</Link>
+          New to Oli? <Link to="/register">Create an account</Link>
         </p>
       </div>
     </div>

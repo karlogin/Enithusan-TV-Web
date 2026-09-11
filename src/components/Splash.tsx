@@ -15,7 +15,7 @@ export default function Splash({ onDone }: { onDone: () => void }) {
 
   return (
     <div ref={ref} className="splash" aria-hidden="true">
-      <span className="splash-wordmark">eithu</span>
+      <span className="splash-wordmark">oli</span>
     </div>
   );
 }

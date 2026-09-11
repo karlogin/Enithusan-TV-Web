@@ -6,13 +6,13 @@ export default function About() {
     <div className="page">
       <div className="page-content" style={{ maxWidth: 720, paddingBottom: '5rem' }}>
         <div className="page-header">
-          <h1>About Eithu</h1>
+          <h1>About Oli</h1>
           <p className="page-subtitle">A premium front-end for South Asian cinema.</p>
         </div>
 
         <section style={{ marginBottom: '2.5rem' }}>
           <p style={{ color: 'var(--text-secondary)', lineHeight: 1.75, fontSize: '1rem' }}>
-            Eithu is a beautifully crafted streaming interface for Tamil, Hindi, and Malayalam
+            Oli is a beautifully crafted streaming interface for Tamil, Hindi, and Malayalam
             movies. It brings a cinematic, Apple-native experience to a catalogue of South Asian
             cinema — discover, browse, and watch in one fluid app.
           </p>
@@ -21,7 +21,7 @@ export default function About() {
         <section style={{ marginBottom: '2.5rem' }}>
           <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.75rem', letterSpacing: '-0.01em' }}>How it works</h2>
           <p style={{ color: 'var(--text-secondary)', lineHeight: 1.75 }}>
-            Eithu is a front-end interface. It does not host or store any video files — streams
+            Oli is a front-end interface. It does not host or store any video files — streams
             are served directly from the content CDN. Users are responsible for complying with
             applicable laws and terms of service in their region.
           </p>
@@ -30,7 +30,7 @@ export default function About() {
         <section style={{ marginBottom: '2.5rem' }}>
           <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.75rem', letterSpacing: '-0.01em' }}>Install as an app</h2>
           <p style={{ color: 'var(--text-secondary)', lineHeight: 1.75 }}>
-            Add Eithu to your home screen for a full-screen, native-feeling experience.
+            Add Oli to your home screen for a full-screen, native-feeling experience.
             On iOS and iPadOS: tap the Share button in Safari, then choose
             &ldquo;Add to Home Screen.&rdquo; On Android: tap the browser menu and choose
             &ldquo;Install app&rdquo; or &ldquo;Add to home screen.&rdquo;
@@ -40,7 +40,7 @@ export default function About() {
         <section style={{ marginBottom: '2.5rem' }}>
           <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.75rem', letterSpacing: '-0.01em' }}>Privacy</h2>
           <p style={{ color: 'var(--text-secondary)', lineHeight: 1.75 }}>
-            Eithu stores your watchlist, continue-watching progress, and profile preferences
+            Oli stores your watchlist, continue-watching progress, and profile preferences
             locally on your device and, when signed in, on our servers. No viewing data is sold
             or shared with third parties.
           </p>

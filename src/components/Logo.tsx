@@ -7,8 +7,8 @@ interface LogoProps {
 
 export default function Logo({ compact = false }: LogoProps) {
   return (
-    <Link to="/" className={`logo ${compact ? 'logo-compact' : ''}`} aria-label="Eithu home">
-      <span className="logo-wordmark">eithu</span>
+    <Link to="/" className={`logo ${compact ? 'logo-compact' : ''}`} aria-label="Oli home">
+      <span className="logo-wordmark">oli</span>
     </Link>
   );
 }
