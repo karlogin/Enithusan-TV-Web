@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import MyListButton from './MyListButton';
 import type { Movie } from '../types';
@@ -19,12 +19,17 @@ export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
   const timerRef = useRef<number | null>(null);
   const touchStartX = useRef(0);
   const movie = movies[index] ?? movies[0];
+  const reducedMotion = useMemo(
+    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    [],
+  );
 
   useEffect(() => {
+    if (reducedMotion) return;
     const onScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [reducedMotion]);
 
   const goTo = (i: number) => {
     setIndex(i);
@@ -66,7 +71,8 @@ export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
 
   if (!movie) return null;
 
-  const parallax = scrollY * 0.22;
+  const parallax = reducedMotion ? 0 : scrollY * 0.22;
+  const contentShift = reducedMotion ? 0 : scrollY * 0.06;
 
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -105,7 +111,7 @@ export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
           src={movie.poster}
           alt=""
           aria-hidden="true"
-          style={{ transform: `translateY(calc(-50% + ${scrollY * -0.06}px))` }}
+          style={{ transform: `translateY(calc(-50% + ${-contentShift}px))` }}
         />
       )}
       {/* Mobile: poster card centered at top */}
@@ -118,7 +124,7 @@ export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
           key={`mobile-${movie.id}`}
         />
       )}
-      <div className="hero-content" key={movie.id} style={{ transform: `translateY(${scrollY * 0.06}px)` }}>
+      <div className="hero-content" key={movie.id} style={{ transform: `translateY(${contentShift}px)` }}>
         <p className="hero-lang">{LANGUAGE_LABELS[movie.lang]}</p>
         <h1 className="hero-title">{movie.title}</h1>
         <div className="hero-meta">

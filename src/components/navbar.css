@@ -54,8 +54,8 @@
 }
 
 .navbar-links a.active {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.09);
+  color: #F5C46A;
+  background: rgba(212, 133, 42, 0.12);
 }
 
 .navbar-right {
@@ -74,8 +74,8 @@
 
 .search-toggle {
   color: var(--text-secondary);
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -266,9 +266,12 @@
   }
 
   .mobile-lang-pill {
-    font-size: 0.69rem;
+    font-size: 0.72rem;
     font-weight: 500;
-    padding: 0.22rem 0.58rem;
+    padding: 0.5rem 0.65rem;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
     border-radius: var(--radius-pill);
     color: var(--text-muted);
     border: 1px solid transparent;
