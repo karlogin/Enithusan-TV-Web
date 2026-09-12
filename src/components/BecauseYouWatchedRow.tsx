@@ -1,41 +1,27 @@
-import { useEffect, useState } from 'react';
-import { getHome } from '../api';
+import { useMemo } from 'react';
 import MovieRow from './MovieRow';
-import { useLanguage } from '../context/LanguageContext';
 import { useUserLibrary } from '../context/UserLibraryContext';
-import type { Movie } from '../types';
+import type { HomeData, Movie } from '../types';
 
 interface BecauseYouWatchedRowProps {
+  homeData: HomeData;
   onMoreInfo?: (movie: Movie) => void;
 }
 
-export default function BecauseYouWatchedRow({ onMoreInfo }: BecauseYouWatchedRowProps) {
-  const { language } = useLanguage();
+export default function BecauseYouWatchedRow({ homeData, onMoreInfo }: BecauseYouWatchedRowProps) {
   const { continueWatching } = useUserLibrary();
-  const [movies, setMovies] = useState<Movie[]>([]);
   const seed = continueWatching[0];
 
-  const watchedIds = continueWatching.map((m) => m.id).join(',');
-  useEffect(() => {
-    if (!seed) return;
-    let cancelled = false;
-    getHome(language)
-      .then((data) => {
-        if (cancelled) return;
-        const pool = [
-          ...data.browse,
-          ...data.featured.mostWatched,
-          ...data.featured.recentlyAdded,
-        ];
-        const seen = new Set(watchedIds.split(',').filter(Boolean));
-        setMovies(pool.filter((m) => !seen.has(m.id)).slice(0, 12));
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language, seed?.id, watchedIds]);
+  const movies = useMemo(() => {
+    if (!seed) return [];
+    const watchedIds = new Set(continueWatching.map((m) => m.id));
+    const pool = [
+      ...homeData.browse,
+      ...homeData.featured.mostWatched,
+      ...homeData.featured.recentlyAdded,
+    ];
+    return pool.filter((m) => !watchedIds.has(m.id)).slice(0, 12);
+  }, [seed?.id, continueWatching, homeData]);
 
   if (!seed || movies.length === 0) return null;
 
