@@ -54,10 +54,20 @@ export default function Home() {
   const { heroCandidates, topTen, newThisWeek, dedupedSections } = useMemo(() => {
     if (!data) return { heroCandidates: [], topTen: [], newThisWeek: [], dedupedSections: [] };
 
-    const candidates = [
-      ...data.featured.mostWatched.slice(0, 5),
-      ...data.browse.slice(0, 3),
-    ].filter((m, i, arr) => arr.findIndex((x) => x.id === m.id) === i);
+    // New This Week — recentlyAdded filtered by language.
+    // Fall back to all recentlyAdded when the API doesn't set lang on each movie.
+    const recentlyAddedLang = data.featured.recentlyAdded.filter((m) => m.lang === language);
+    const newWeek = recentlyAddedLang.length > 0 ? recentlyAddedLang : data.featured.recentlyAdded;
+
+    // Hero carousel: New This Week first, pad to 5 with mostWatched (language-aware)
+    const mostWatchedLang = data.featured.mostWatched.filter((m) => m.lang === language);
+    const mostWatchedPool = mostWatchedLang.length > 0 ? mostWatchedLang : data.featured.mostWatched;
+    const heroPool = [...newWeek];
+    for (const m of mostWatchedPool) {
+      if (heroPool.length >= 5) break;
+      if (!heroPool.find((x) => x.id === m.id)) heroPool.push(m);
+    }
+    const candidates = heroPool.slice(0, 5);
 
     // "mostWatched" alone is often fewer than 10 titles, so backfill.
     const topTenPool = [
@@ -69,9 +79,6 @@ export default function Home() {
     ].filter((m) => m.lang === language)
       .filter((m, i, arr) => arr.findIndex((x) => x.id === m.id) === i);
     const ten = topTenPool.slice(0, 10);
-
-    // New This Week — recentlyAdded filtered by language, pinned before other sections
-    const newWeek = data.featured.recentlyAdded.filter((m) => m.lang === language);
 
     const seen = new Set([...ten.map((m) => m.id), ...newWeek.map((m) => m.id)]);
     const rawSections = HOME_SECTIONS.map(({ key, title, subtitle }) => {
