@@ -34,8 +34,18 @@ async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+const homeCache = new Map<string, { data: HomeData; ts: number }>();
+const HOME_CACHE_TTL_MS = 5 * 60 * 1000;
+
 export function getHome(lang: Language): Promise<HomeData> {
-  return fetchJson<HomeData>(`/home?lang=${lang}`);
+  const cached = homeCache.get(lang);
+  if (cached && Date.now() - cached.ts < HOME_CACHE_TTL_MS) {
+    return Promise.resolve(cached.data);
+  }
+  return fetchJson<HomeData>(`/home?lang=${lang}`).then((data) => {
+    homeCache.set(lang, { data, ts: Date.now() });
+    return data;
+  });
 }
 
 export function getBrowseMore(lang: Language, year: number, page: number): Promise<Movie[]> {
