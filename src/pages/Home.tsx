@@ -137,7 +137,7 @@ export default function Home() {
       )}
       <div className="page-content" style={{ marginTop: heroCandidates.length ? '-4rem' : '1rem', position: 'relative', zIndex: 2 }}>
         <ContinueWatchingRow items={continueWatching} />
-        <BecauseYouWatchedRow onMoreInfo={setModalMovie} />
+        <BecauseYouWatchedRow homeData={data} onMoreInfo={setModalMovie} />
         {newThisWeek.length > 0 && (
           <MovieRow title="New This Week" subtitle="Fresh titles added this week" movies={newThisWeek} onMoreInfo={setModalMovie} />
         )}

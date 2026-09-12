@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { getUserLibrary, saveUserLibrary } from '../api';
 import { profileStorageKey, useProfile } from './ProfileContext';
 import { useAuth } from './AuthContext';
@@ -32,11 +32,14 @@ function loadLocalLibrary(key: string): UserLibrary {
   return { myList: [], continueWatching: [], history: [] };
 }
 
+const PROGRESS_KV_THROTTLE_MS = 60_000; // write progress to KV at most once per minute
+
 export function UserLibraryProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { activeProfile } = useProfile();
   const storageKey = profileStorageKey('vadai-library', activeProfile.id);
   const [library, setLibrary] = useState<UserLibrary>(() => loadLocalLibrary(storageKey));
+  const lastProgressKvWrite = useRef<number>(0);
 
   useEffect(() => {
     setLibrary(loadLocalLibrary(storageKey));
@@ -59,11 +62,15 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
   }, [user?.id, activeProfile.id, storageKey]);
 
   const persist = useCallback(
-    (next: UserLibrary) => {
+    (next: UserLibrary, throttleRemote = false) => {
       setLibrary(next);
       localStorage.setItem(storageKey, JSON.stringify(next));
       if (user) {
-        saveUserLibrary(next, activeProfile.id).catch(() => undefined);
+        const now = Date.now();
+        if (!throttleRemote || now - lastProgressKvWrite.current >= PROGRESS_KV_THROTTLE_MS) {
+          lastProgressKvWrite.current = now;
+          saveUserLibrary(next, activeProfile.id).catch(() => undefined);
+        }
       }
     },
     [user, storageKey, activeProfile.id],
@@ -89,6 +96,7 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
     (movie: Movie, progress: number, duration: number) => {
       if (!duration || progress < 10) return;
       if (progress / duration > 0.95) {
+        // Completed — remove from continue watching, write immediately
         persist({
           ...library,
           continueWatching: library.continueWatching.filter((m) => m.id !== movie.id),
@@ -102,7 +110,8 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
         updatedAt: Date.now(),
       };
       const rest = library.continueWatching.filter((m) => m.id !== movie.id);
-      persist({ ...library, continueWatching: [item, ...rest].slice(0, 20) });
+      // throttleRemote=true: local state updates every 5s but KV writes at most once/min
+      persist({ ...library, continueWatching: [item, ...rest].slice(0, 20) }, true);
     },
     [library, persist],
   );
