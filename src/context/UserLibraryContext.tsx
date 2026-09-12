@@ -171,13 +171,13 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
   );
 }
 
-function mergeMovies(a: Movie[], b: Movie[]): Movie[] {
+export function mergeMovies(a: Movie[], b: Movie[]): Movie[] {
   const map = new Map<string, Movie>();
   [...a, ...b].forEach((m) => map.set(m.id, m));
   return [...map.values()];
 }
 
-function mergeHistory(a: HistoryItem[], b: HistoryItem[]): HistoryItem[] {
+export function mergeHistory(a: HistoryItem[], b: HistoryItem[]): HistoryItem[] {
   const map = new Map<string, HistoryItem>();
   [...a, ...b].forEach((m) => {
     const existing = map.get(m.id);
@@ -186,7 +186,7 @@ function mergeHistory(a: HistoryItem[], b: HistoryItem[]): HistoryItem[] {
   return [...map.values()].sort((x, y) => y.watchedAt - x.watchedAt).slice(0, 200);
 }
 
-function mergeContinue(a: ContinueWatchingItem[], b: ContinueWatchingItem[]): ContinueWatchingItem[] {
+export function mergeContinue(a: ContinueWatchingItem[], b: ContinueWatchingItem[]): ContinueWatchingItem[] {
   const map = new Map<string, ContinueWatchingItem>();
   [...a, ...b].forEach((m) => {
     const existing = map.get(m.id);
