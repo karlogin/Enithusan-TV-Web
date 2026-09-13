@@ -5,8 +5,15 @@ import CustomSelect from '../components/CustomSelect';
 import MovieCard from '../components/MovieCard';
 import MovieModal from '../components/MovieModal';
 import { SkeletonPage } from '../components/Skeleton';
-import type { Movie } from '../types';
+import type { Language, Movie } from '../types';
 import '../components/profile.css';
+
+const LANG_CHIPS: { value: Language | 'all'; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'tamil', label: 'Tamil' },
+  { value: 'hindi', label: 'Hindi' },
+  { value: 'malayalam', label: 'Malayalam' },
+];
 
 const PAGE_SIZE = 18;
 const OLDEST_YEAR = 2015;
@@ -19,6 +26,7 @@ export default function Browse() {
   const [error, setError] = useState<string | null>(null);
   const [uhdOnly, setUhdOnly] = useState(false);
   const [yearFilter, setYearFilter] = useState('');
+  const [langFilter, setLangFilter] = useState<Language | 'all'>('all');
   const [modalMovie, setModalMovie] = useState<Movie | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -108,13 +116,14 @@ export default function Browse() {
     return movies.filter((m) => {
       if (uhdOnly && !m.uhd) return false;
       if (yearFilter && m.year !== yearFilter) return false;
+      if (langFilter !== 'all' && m.lang !== langFilter) return false;
       return true;
     });
-  }, [movies, uhdOnly, yearFilter]);
+  }, [movies, uhdOnly, yearFilter, langFilter]);
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [uhdOnly, yearFilter, language]);
+  }, [uhdOnly, yearFilter, langFilter, language]);
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -155,20 +164,36 @@ export default function Browse() {
           <p className="search-results-count">{filtered.length} titles</p>
         </div>
         <div className="browse-filters">
-          <button
-            type="button"
-            className={`filter-chip ${uhdOnly ? 'active' : ''}`}
-            onClick={() => setUhdOnly((v) => !v)}
-          >
-            Ultra HD only
-          </button>
-          <CustomSelect
-            className="filter-select-wrap"
-            value={yearFilter}
-            onChange={setYearFilter}
-            options={[{ value: '', label: 'All years' }, ...years.map((y) => ({ value: y, label: y }))]}
-            ariaLabel="Filter by year"
-          />
+          <div className="browse-lang-chips" role="group" aria-label="Filter by language">
+            {LANG_CHIPS.map((chip) => (
+              <button
+                key={chip.value}
+                type="button"
+                className={`filter-chip ${langFilter === chip.value ? 'active' : ''}`}
+                onClick={() => setLangFilter(chip.value)}
+                aria-pressed={langFilter === chip.value}
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
+          <div className="browse-filter-row">
+            <button
+              type="button"
+              className={`filter-chip ${uhdOnly ? 'active' : ''}`}
+              onClick={() => setUhdOnly((v) => !v)}
+              aria-pressed={uhdOnly}
+            >
+              Ultra HD only
+            </button>
+            <CustomSelect
+              className="filter-select-wrap"
+              value={yearFilter}
+              onChange={setYearFilter}
+              options={[{ value: '', label: 'All years' }, ...years.map((y) => ({ value: y, label: y }))]}
+              ariaLabel="Filter by year"
+            />
+          </div>
         </div>
         <div className="browse-grid">
           {visible.map((movie) => (

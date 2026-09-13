@@ -23,6 +23,7 @@ import MyList from './pages/MyList';
 import History from './pages/History';
 import Account from './pages/Account';
 import About from './pages/About';
+import SharedList from './pages/SharedList';
 import NotFound from './pages/NotFound';
 import './App.css';
 
@@ -75,6 +76,7 @@ export default function App() {
                       <Route path="/history" element={<History />} />
                       <Route path="/account" element={<Account />} />
                       <Route path="/about" element={<About />} />
+                      <Route path="/shared-list" element={<SharedList />} />
                       <Route path="/watch/:id" element={<Watch />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>

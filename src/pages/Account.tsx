@@ -7,14 +7,64 @@ import { useUserLibrary } from '../context/UserLibraryContext';
 import { exportLibrary } from '../utils/libraryExport';
 import './auth.css';
 
+function PinSetup({ profileId, hasPin, onSet }: { profileId: string; hasPin: boolean; onSet: (pin: string | null) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [pin, setPin] = useState('');
+  const [error, setError] = useState('');
+
+  const submit = () => {
+    if (pin.length !== 4 || !/^\d{4}$/.test(pin)) { setError('PIN must be exactly 4 digits'); return; }
+    onSet(pin);
+    setEditing(false);
+    setPin('');
+    setError('');
+  };
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        className="btn btn-secondary"
+        style={{ padding: '0.3rem 0.75rem', fontSize: '0.82rem' }}
+        onClick={() => setEditing(true)}
+      >
+        {hasPin ? 'Change PIN' : 'Set PIN'}
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+      <input
+        type="password"
+        inputMode="numeric"
+        maxLength={4}
+        placeholder="4-digit PIN"
+        value={pin}
+        autoFocus
+        onChange={(e) => { setPin(e.target.value.replace(/\D/g, '')); setError(''); }}
+        style={{ width: 100, padding: '0.35rem 0.5rem', borderRadius: 8, border: '1px solid var(--glass-border-light)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '1rem' }}
+        aria-label={`PIN for profile ${profileId}`}
+      />
+      {error && <p style={{ color: '#ff6b6b', fontSize: '0.8rem', margin: 0 }}>{error}</p>}
+      <div style={{ display: 'flex', gap: '0.4rem' }}>
+        <button type="button" className="btn btn-primary" style={{ padding: '0.3rem 0.75rem', fontSize: '0.82rem' }} onClick={submit}>Save</button>
+        {hasPin && <button type="button" className="btn btn-secondary" style={{ padding: '0.3rem 0.75rem', fontSize: '0.82rem', color: '#ff6b6b' }} onClick={() => { onSet(null); setEditing(false); setPin(''); }}>Remove PIN</button>}
+        <button type="button" className="btn btn-secondary" style={{ padding: '0.3rem 0.75rem', fontSize: '0.82rem' }} onClick={() => { setEditing(false); setPin(''); setError(''); }}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
 export default function Account() {
   const { user, logout } = useAuth();
-  const { profiles, addProfile, removeProfile } = useProfile();
+  const { profiles, addProfile, removeProfile, setProfilePin } = useProfile();
   const { myList, continueWatching, importLibrary } = useUserLibrary();
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
   const [newProfile, setNewProfile] = useState('');
+  const [newProfileKids, setNewProfileKids] = useState(false);
 
   if (!user) {
     return (
@@ -121,34 +171,48 @@ export default function Account() {
         <section className="account-section">
           <h2>Profiles</h2>
           {profiles.map((p) => (
-            <div key={p.id} className="account-row">
-              <span className="account-row-name">
-                {p.name}{p.isKids ? ' · Kids' : ''}
-              </span>
-              {p.id !== 'default' && (
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  style={{ padding: '0.35rem 0.85rem', fontSize: '0.82rem' }}
-                  onClick={() => removeProfile(p.id)}
-                >
-                  Remove
-                </button>
-              )}
+            <div key={p.id} className="account-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '0.4rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
+                <div className="profile-avatar-sm" style={{ background: p.color }}>{p.name[0].toUpperCase()}</div>
+                <span className="account-row-name">
+                  {p.name}
+                  {p.isKids && <span style={{ marginLeft: '0.4rem', fontSize: '0.75rem', padding: '1px 6px', borderRadius: 99, background: 'rgba(70,211,105,0.15)', color: '#46d369' }}>Kids</span>}
+                  {p.pin && <span style={{ marginLeft: '0.4rem', fontSize: '0.75rem', opacity: 0.6 }}>🔒</span>}
+                </span>
+                {p.id !== 'default' && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ marginLeft: 'auto', padding: '0.3rem 0.75rem', fontSize: '0.82rem', color: '#ff6b6b' }}
+                    onClick={() => removeProfile(p.id)}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              <PinSetup profileId={p.id} hasPin={!!p.pin} onSet={(pin) => setProfilePin(p.id, pin)} />
             </div>
           ))}
-          <div className="account-add-row">
+          <div className="account-add-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '0.5rem' }}>
             <input
               value={newProfile}
               onChange={(e) => setNewProfile(e.target.value)}
               placeholder="New profile name"
             />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.88rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={newProfileKids}
+                onChange={(e) => setNewProfileKids(e.target.checked)}
+              />
+              Kids profile (no access to adult content)
+            </label>
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={() => { if (newProfile.trim()) { addProfile(newProfile.trim()); setNewProfile(''); } }}
+              onClick={() => { if (newProfile.trim()) { addProfile(newProfile.trim(), newProfileKids); setNewProfile(''); setNewProfileKids(false); } }}
             >
-              Add
+              Add Profile
             </button>
           </div>
         </section>
