@@ -670,14 +670,15 @@ export default function VideoPlayer({
         playsInline
         controls={isTouchDevice}
         poster={poster}
+        aria-label={title ?? 'Video player'}
         onClick={!isTouchDevice ? togglePlay : undefined}
         onDoubleClick={!isTouchDevice ? toggleFullscreen : undefined}
       />
 
       {/* Loading spinner */}
       {loading && (
-        <div className="player-loading">
-          <div className="loading-spinner" />
+        <div className="player-loading" role="status" aria-label="Loading video">
+          <div className="loading-spinner" aria-hidden="true" />
         </div>
       )}
 
