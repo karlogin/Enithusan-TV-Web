@@ -32,7 +32,7 @@ function loadLocalLibrary(key: string): UserLibrary {
   return { myList: [], continueWatching: [], history: [] };
 }
 
-const KV_WRITE_THROTTLE_MS = 60_000; // write to KV at most once per minute for progress/history
+const KV_WRITE_THROTTLE_MS = 300_000; // write to KV at most once per 5 minutes for progress/history
 
 export function UserLibraryProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -102,11 +102,14 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
     (movie: Movie, progress: number, duration: number) => {
       if (!duration || progress < 10) return;
       if (progress / duration > 0.95) {
-        // Completed — remove from continue watching, write immediately
-        persist({
-          ...library,
-          continueWatching: library.continueWatching.filter((m) => m.id !== movie.id),
-        });
+        // Completed — remove from continue watching, but only write once (guard prevents
+        // repeated KV writes every 5 s while the user remains past the 95% mark)
+        if (library.continueWatching.some((m) => m.id === movie.id)) {
+          persist({
+            ...library,
+            continueWatching: library.continueWatching.filter((m) => m.id !== movie.id),
+          });
+        }
         return;
       }
       const item: ContinueWatchingItem = {
