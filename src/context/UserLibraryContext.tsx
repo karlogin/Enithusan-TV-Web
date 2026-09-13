@@ -32,7 +32,7 @@ function loadLocalLibrary(key: string): UserLibrary {
   return { myList: [], continueWatching: [], history: [] };
 }
 
-const PROGRESS_KV_THROTTLE_MS = 60_000; // write progress to KV at most once per minute
+const KV_WRITE_THROTTLE_MS = 60_000; // write to KV at most once per minute for progress/history
 
 export function UserLibraryProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -56,7 +56,13 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
         };
         setLibrary(merged);
         localStorage.setItem(storageKey, JSON.stringify(merged));
-        saveUserLibrary(merged, activeProfile.id).catch(() => undefined);
+        // Only write back if local had entries not in remote (i.e. a genuine merge happened)
+        const addedToRemote =
+          merged.myList.length > remote.myList.length ||
+          merged.continueWatching.length > remote.continueWatching.length;
+        if (addedToRemote) {
+          saveUserLibrary(merged, activeProfile.id).catch(() => undefined);
+        }
       })
       .catch(() => undefined);
   }, [user?.id, activeProfile.id, storageKey]);
@@ -67,7 +73,7 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
       localStorage.setItem(storageKey, JSON.stringify(next));
       if (user) {
         const now = Date.now();
-        if (!throttleRemote || now - lastProgressKvWrite.current >= PROGRESS_KV_THROTTLE_MS) {
+        if (!throttleRemote || now - lastProgressKvWrite.current >= KV_WRITE_THROTTLE_MS) {
           lastProgressKvWrite.current = now;
           saveUserLibrary(next, activeProfile.id).catch(() => undefined);
         }
@@ -130,7 +136,9 @@ export function UserLibraryProvider({ children }: { children: React.ReactNode })
     (movie: Movie, progress?: number, duration?: number) => {
       const item: HistoryItem = { ...movie, watchedAt: Date.now(), progress, duration };
       const rest = (library.history ?? []).filter((m) => m.id !== movie.id);
-      persist({ ...library, history: [item, ...rest].slice(0, 200) });
+      // throttleRemote=true: history is called on progress events; local state always updates,
+      // but KV writes are shared-throttled with progress writes (once per minute max)
+      persist({ ...library, history: [item, ...rest].slice(0, 200) }, true);
     },
     [library, persist],
   );
