@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { getMovie, refreshStream } from '../api';
 import CastHint from '../components/CastHint';
@@ -26,6 +26,8 @@ export default function Watch() {
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const { reaction, setReaction } = useReactions(id ?? '');
+  // Guard: add to history only once per viewing session, not on every progress tick
+  const historyAdded = useRef(false);
 
   const saved = continueWatching.find((m) => m.id === id);
   const startTime = saved?.progress ?? 0;
@@ -121,7 +123,10 @@ export default function Watch() {
             startTime={startTime}
             onProgress={(progress, duration) => {
               updateProgress(movie, progress, duration);
-              if (progress >= 30) addToHistory(movie, progress, duration);
+              if (progress >= 30 && !historyAdded.current) {
+                historyAdded.current = true;
+                addToHistory(movie, progress, duration);
+              }
             }}
             onStreamError={onStreamError}
           />

@@ -5,6 +5,12 @@ const authRateMap = new Map();
 const AUTH_RATE_WINDOW_MS = 60 * 1000;
 const AUTH_RATE_LIMIT = 10;
 
+// In-memory session cache: avoids 2 KV reads per authenticated request
+// TTL matches session validity window; evicted eagerly on logout
+const SESSION_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+/** @type {Map<string, { userId: string, user: object, expires: number }>} */
+const sessionCache = new Map();
+
 /** @param {string} ip @returns {boolean} true if allowed */
 function authRateAllow(ip) {
   const now = Date.now();
@@ -94,11 +100,17 @@ async function getSessionUser(request, env) {
   const auth = request.headers.get('Authorization');
   if (!auth?.startsWith('Bearer ')) return null;
   const token = auth.slice(7);
+
+  const cached = sessionCache.get(token);
+  if (cached && cached.expires > Date.now()) return cached.user;
+
   const userId = await kv(env).get(`session:${token}`);
   if (!userId) return null;
   const raw = await kv(env).get(`user:${userId}`);
   if (!raw) return null;
-  return JSON.parse(raw);
+  const user = JSON.parse(raw);
+  sessionCache.set(token, { userId, user, expires: Date.now() + SESSION_CACHE_TTL_MS });
+  return user;
 }
 
 /** @param {Request} request @param {object} env @param {Record<string, string>} corsHeaders */
@@ -185,7 +197,9 @@ export async function handleAuth(request, env, corsHeaders) {
   if (path === '/api/auth/logout' && request.method === 'POST') {
     const auth = request.headers.get('Authorization');
     if (auth?.startsWith('Bearer ')) {
-      await kv(env).delete(`session:${auth.slice(7)}`);
+      const token = auth.slice(7);
+      sessionCache.delete(token);
+      await kv(env).delete(`session:${token}`);
     }
     return json({ ok: true }, 200, corsHeaders);
   }
@@ -259,6 +273,9 @@ export async function handleAuth(request, env, corsHeaders) {
     user.salt = salt;
     user.passwordHash = await hashPassword(next, salt);
     await kv(env).put(`user:${user.id}`, JSON.stringify(user));
+    // Evict cached session so next request re-reads the updated user
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader?.startsWith('Bearer ')) sessionCache.delete(authHeader.slice(7));
     return json({ ok: true }, 200, corsHeaders);
   }
 
