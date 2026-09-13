@@ -5,6 +5,7 @@ export interface Profile {
   name: string;
   color: string;
   isKids?: boolean;
+  pin?: string; // 4-digit PIN; if set, required to switch TO this profile
 }
 
 interface ProfileContextValue {
@@ -13,6 +14,8 @@ interface ProfileContextValue {
   setActiveProfile: (id: string) => void;
   addProfile: (name: string, isKids?: boolean) => void;
   removeProfile: (id: string) => void;
+  setProfilePin: (id: string, pin: string | null) => void;
+  checkPin: (id: string, attempt: string) => boolean;
 }
 
 const ProfileContext = createContext<ProfileContextValue | null>(null);
@@ -85,9 +88,25 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     [profiles, activeId, persist, setActiveProfile],
   );
 
+  const setProfilePin = useCallback(
+    (id: string, pin: string | null) => {
+      persist(profiles.map((p) => p.id === id ? { ...p, pin: pin ?? undefined } : p));
+    },
+    [profiles, persist],
+  );
+
+  const checkPin = useCallback(
+    (id: string, attempt: string) => {
+      const profile = profiles.find((p) => p.id === id);
+      if (!profile?.pin) return true;
+      return profile.pin === attempt;
+    },
+    [profiles],
+  );
+
   const value = useMemo(
-    () => ({ profiles, activeProfile, setActiveProfile, addProfile, removeProfile }),
-    [profiles, activeProfile, setActiveProfile, addProfile, removeProfile],
+    () => ({ profiles, activeProfile, setActiveProfile, addProfile, removeProfile, setProfilePin, checkPin }),
+    [profiles, activeProfile, setActiveProfile, addProfile, removeProfile, setProfilePin, checkPin],
   );
 
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>;

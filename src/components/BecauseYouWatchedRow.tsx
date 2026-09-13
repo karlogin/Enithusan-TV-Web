@@ -20,7 +20,21 @@ export default function BecauseYouWatchedRow({ homeData, onMoreInfo }: BecauseYo
       ...homeData.featured.mostWatched,
       ...homeData.featured.recentlyAdded,
     ];
-    return pool.filter((m) => !watchedIds.has(m.id)).slice(0, 12);
+    const seedYear = seed.year ? parseInt(seed.year, 10) : null;
+    return pool
+      .filter((m) => !watchedIds.has(m.id))
+      .map((m) => {
+        let score = 0;
+        if (m.lang === seed.lang) score += 10;
+        if (seedYear && m.year) {
+          const diff = Math.abs(parseInt(m.year, 10) - seedYear);
+          score += Math.max(0, 5 - diff);
+        }
+        return { m, score };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 12)
+      .map(({ m }) => m);
   }, [seed?.id, continueWatching, homeData]);
 
   if (!seed || movies.length === 0) return null;
