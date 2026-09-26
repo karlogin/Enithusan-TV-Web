@@ -87,7 +87,10 @@ export default function VideoPlayer({
     setSrcMp4(mp4Url);
     setSrcHls(hlsUrl);
     startTimeRef.current = startTime;
-    refreshAttempt.current = 0;
+    // Note: refreshAttempt is NOT reset here. A stream refresh (onStreamError)
+    // updates these same mp4Url/hlsUrl props, so resetting on every change would
+    // erase the retry counter on every retry and let a dead stream loop forever.
+    // It only resets on confirmed successful playback, in the load effect below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mp4Url, hlsUrl]);
 
@@ -190,6 +193,7 @@ export default function VideoPlayer({
 
     if (srcMp4) {
       const onReady = () => {
+        refreshAttempt.current = 0;
         seekToStart();
         setLoading(false);
         video.play().catch(() => undefined);
@@ -198,7 +202,10 @@ export default function VideoPlayer({
 
       video.addEventListener('loadedmetadata', onReady, { once: true });
       video.addEventListener('error', onError, { once: true });
-      video.src = srcMp4;
+      // Proxy through our worker, not a direct cross-site request: einthusan.io's
+      // CDN enforces referrer/hotlink checks that a browser-set Referer fails,
+      // while our worker fetches server-side with the referrer the CDN expects.
+      video.src = proxyStreamUrl(srcMp4);
 
       return () => {
         video.removeEventListener('loadedmetadata', onReady);
@@ -225,6 +232,7 @@ export default function VideoPlayer({
         hls.loadSource(src);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          refreshAttempt.current = 0;
           seekToStart();
           setLoading(false);
           video.play().catch(() => undefined);
@@ -241,6 +249,7 @@ export default function VideoPlayer({
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = src;
         video.addEventListener('loadedmetadata', () => {
+          refreshAttempt.current = 0;
           seekToStart();
           setLoading(false);
         }, { once: true });
@@ -500,7 +509,7 @@ export default function VideoPlayer({
       const cast = (window as any).chrome?.cast;
       if (!cast) return;
 
-      const url = srcMp4 || (srcHls ? proxyStreamUrl(srcHls) : null);
+      const url = srcMp4 ? proxyStreamUrl(srcMp4) : srcHls ? proxyStreamUrl(srcHls) : null;
       if (!url) return;
 
       const mediaInfo = new cast.media.MediaInfo(
