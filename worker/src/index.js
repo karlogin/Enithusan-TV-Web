@@ -306,11 +306,13 @@ async function proxyStream(request) {
     return new Response('Host not allowed', { status: 403, headers: streamCorsHeaders });
   }
 
+  const range = request.headers.get('Range');
   const upstream = await fetch(streamUrl, {
     headers: {
       'User-Agent': USER_AGENT,
       Referer: `${BASE}/`,
       Origin: BASE,
+      ...(range ? { Range: range } : {}),
     },
     signal: AbortSignal.timeout(25000),
   });
