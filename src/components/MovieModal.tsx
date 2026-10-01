@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getMovie } from '../api';
+import { getMovie, proxyImageUrl } from '../api';
 import MyListButton from './MyListButton';
 import { useUserLibrary } from '../context/UserLibraryContext';
 import type { Movie, MovieDetails } from '../types';
@@ -69,7 +69,7 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
       <button type="button" className="modal-backdrop" aria-label="Close" onClick={onClose} />
       <div className="modal-panel" ref={panelRef}>
         {/* Cinematic hero */}
-        <div className="modal-hero" style={{ backgroundImage: d.poster ? `url(${d.poster})` : undefined }}>
+        <div className="modal-hero" style={{ backgroundImage: d.poster ? `url(${proxyImageUrl(d.poster)})` : undefined }}>
           <div className="modal-hero-gradient" />
           <button type="button" className="modal-close" aria-label="Close" onClick={onClose}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
@@ -89,7 +89,7 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
         <div className="modal-body">
           <div className="modal-top">
             {d.poster && (
-              <img className="modal-poster" src={d.poster} alt="" aria-hidden="true" />
+              <img className="modal-poster" src={proxyImageUrl(d.poster)} alt="" aria-hidden="true" />
             )}
             <div className="modal-top-text">
               <h2 id="modal-title" className="modal-title">{d.title}</h2>

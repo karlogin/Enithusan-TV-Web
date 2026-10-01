@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { searchMovies } from '../api';
+import { proxyImageUrl, searchMovies } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import { useSpotlight } from '../context/SpotlightContext';
 import { addSearchHistory, clearSearchHistory, getSearchHistory } from '../hooks/useSearchHistory';
@@ -145,7 +145,7 @@ export default function SpotlightSearch() {
                       else if (e.key === 'ArrowUp') { e.preventDefault(); if (i === 0) { inputRef.current?.focus(); setFocusIdx(-1); } else { listRef.current?.querySelectorAll<HTMLElement>('[data-result]')[i - 1]?.focus(); setFocusIdx(i - 1); } }
                     }}
                   >
-                    <img src={movie.poster} alt="" className="spotlight-poster" loading="lazy" />
+                    <img src={proxyImageUrl(movie.poster)} alt="" className="spotlight-poster" loading="lazy" />
                     <div className="spotlight-result-info">
                       <span className="spotlight-result-title">{movie.title}</span>
                       <span className="spotlight-result-meta">

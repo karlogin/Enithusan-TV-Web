@@ -71,6 +71,10 @@ export function proxyStreamUrl(hlsUrl: string): string {
   return `${API_BASE}/stream?url=${encodeURIComponent(hlsUrl)}`;
 }
 
+export function proxyImageUrl(url: string): string {
+  return url ? `${API_BASE}/stream?url=${encodeURIComponent(url)}` : url;
+}
+
 export function registerUser(email: string, password: string, name: string) {
   return fetchJson<{ token: string; user: User }>('/auth/register', {
     method: 'POST',

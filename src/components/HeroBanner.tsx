@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import MyListButton from './MyListButton';
+import { proxyImageUrl } from '../api';
 import type { Movie } from '../types';
 import { LANGUAGE_LABELS } from '../types';
 import './hero.css';
@@ -99,7 +100,7 @@ export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
       <div
         className="hero-backdrop hero-backdrop--fill"
         style={{
-          backgroundImage: movie.poster ? `url(${movie.poster})` : undefined,
+          backgroundImage: movie.poster ? `url(${proxyImageUrl(movie.poster)})` : undefined,
           transform: `scale(1.3) translateY(${parallax}px)`,
         }}
         key={movie.id}
@@ -108,7 +109,7 @@ export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
       {movie.poster && (
         <img
           className="hero-poster-inset"
-          src={movie.poster}
+          src={proxyImageUrl(movie.poster)}
           alt=""
           aria-hidden="true"
           style={{ transform: `translateY(calc(-50% + ${-contentShift}px))` }}
@@ -118,7 +119,7 @@ export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
       {movie.poster && (
         <img
           className="hero-poster-mobile"
-          src={movie.poster}
+          src={proxyImageUrl(movie.poster)}
           alt=""
           aria-hidden="true"
           key={`mobile-${movie.id}`}
