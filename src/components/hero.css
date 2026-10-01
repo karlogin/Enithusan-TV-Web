@@ -34,10 +34,10 @@
   top: 50%;
   right: 7%;
   transform: translateY(-50%);
-  height: 64%;
-  max-height: 500px;
   width: auto;
-  object-fit: contain;
+  height: auto;
+  max-width: min(100%, 320px);
+  max-height: min(64%, 500px);
   z-index: 1;
   border-radius: var(--radius-lg);
   box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06);
@@ -174,7 +174,7 @@
   height: 2px;
   width: 0%;
   border-radius: var(--radius-pill);
-  background: #F5C46A;
+  background: var(--brand-primary);
   position: relative;
   z-index: 1;
 }
