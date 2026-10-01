@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { getMovie, proxyImageUrl } from '../api';
 import MyListButton from './MyListButton';
@@ -69,7 +69,7 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
       <button type="button" className="modal-backdrop" aria-label="Close" onClick={onClose} />
       <div className="modal-panel" ref={panelRef}>
         {/* Cinematic hero */}
-        <div className="modal-hero" style={{ backgroundImage: d.poster ? `url(${proxyImageUrl(d.poster)})` : undefined }}>
+        <div className="modal-hero" style={{ '--modal-hero-poster': d.poster ? `url(${proxyImageUrl(d.poster)})` : undefined } as CSSProperties}>
           <div className="modal-hero-gradient" />
           <button type="button" className="modal-close" aria-label="Close" onClick={onClose}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>

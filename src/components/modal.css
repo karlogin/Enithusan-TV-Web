@@ -46,9 +46,19 @@
 .modal-hero {
   position: relative;
   height: 300px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.modal-hero::before {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  background-image: var(--modal-hero-poster);
   background-size: cover;
   background-position: center 20%;
-  overflow: hidden;
+  filter: blur(38px) saturate(1.5) brightness(0.5);
+  transform: scale(1.15);
 }
 
 @media (max-width: 600px) {
