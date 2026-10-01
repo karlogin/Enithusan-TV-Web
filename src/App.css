@@ -18,7 +18,17 @@
 .page-content {
   padding: 0 4%;
   padding-bottom: 4rem;
+  position: relative;
+  z-index: 2;
   animation: page-enter 0.3s var(--ease-out) both;
+}
+
+.page-content-overlap {
+  margin-top: -4rem;
+}
+
+.page-content-flush {
+  margin-top: 1rem;
 }
 
 .page-header {
@@ -64,6 +74,20 @@
   color: var(--text-secondary);
   text-align: center;
   padding: 2rem;
+}
+
+.error-screen-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.error-screen-detail {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: -0.5rem 0 0;
+  max-width: 420px;
 }
 
 .loading-spinner {

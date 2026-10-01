@@ -720,7 +720,13 @@ export default function VideoPlayer({
             </div>
           )}
 
-          <div className="vp-controls">
+          <div
+            className="vp-controls"
+            onMouseEnter={() => {
+              if (hideTimer.current) clearTimeout(hideTimer.current);
+            }}
+            onMouseLeave={revealControls}
+          >
             {/* Progress bar */}
             <div
               ref={progressRef}

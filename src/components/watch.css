@@ -228,6 +228,7 @@
   height: 100%;
   display: block;
   background: #000;
+  object-fit: contain;
 }
 
 /* ── Chromecast floating button (mobile — shown over native controls) ─────── */
@@ -549,16 +550,12 @@
     max-height: calc(100vw * 9 / 16);
   }
 
-  .vp-root video {
-    object-fit: contain;
-  }
-
   .watch-back {
     top: max(0.75rem, env(safe-area-inset-top));
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .watch-info {
     padding: 1.25rem 1rem 3rem;
   }
