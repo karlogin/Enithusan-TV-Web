@@ -118,33 +118,49 @@ export default function Home() {
   if (error || !data) {
     return (
       <div className="error-screen">
-        <p>Could not load content.</p>
-        <p>{error}</p>
-        {retryIn > 0 && <p>Retrying in {retryIn}s…</p>}
-        {retryIn === 0 && (
-          <button type="button" className="btn btn-secondary" onClick={() => { setRetryIn(0); setRetryCount((c) => c + 1); }}>
-            Retry now
-          </button>
-        )}
+        <p className="error-screen-title">Could not load content.</p>
+        {error && <p className="error-screen-detail">{error}</p>}
+        <button
+          type="button"
+          className="btn btn-secondary"
+          disabled={retryIn > 0}
+          onClick={() => { setRetryIn(0); setRetryCount((c) => c + 1); }}
+        >
+          {retryIn > 0 ? `Retrying in ${retryIn}s…` : 'Retry now'}
+        </button>
       </div>
     );
   }
+
+  const hasAnySection =
+    continueWatching.length > 0 ||
+    newThisWeek.length > 0 ||
+    topTen.length > 0 ||
+    dedupedSections.length > 0;
 
   return (
     <>
       {heroCandidates.length > 0 && (
         <HeroBanner movies={heroCandidates} onMoreInfo={setModalMovie} />
       )}
-      <div className="page-content" style={{ marginTop: heroCandidates.length ? '-4rem' : '1rem', position: 'relative', zIndex: 2 }}>
-        <ContinueWatchingRow items={continueWatching} />
-        <BecauseYouWatchedRow homeData={data} onMoreInfo={setModalMovie} />
-        {newThisWeek.length > 0 && (
-          <MovieRow title="New This Week" subtitle="Fresh titles added this week" movies={newThisWeek} onMoreInfo={setModalMovie} />
+      <div className={`page-content ${heroCandidates.length ? 'page-content-overlap' : 'page-content-flush'}`}>
+        {hasAnySection ? (
+          <>
+            <ContinueWatchingRow items={continueWatching} />
+            <BecauseYouWatchedRow homeData={data} onMoreInfo={setModalMovie} />
+            {newThisWeek.length > 0 && (
+              <MovieRow title="New This Week" subtitle="Fresh titles added this week" movies={newThisWeek} onMoreInfo={setModalMovie} />
+            )}
+            <TopTenRow movies={topTen} onMoreInfo={setModalMovie} />
+            {dedupedSections.map(({ key, title, subtitle, movies }) => (
+              <MovieRow key={key} title={title} subtitle={subtitle} movies={movies} onMoreInfo={setModalMovie} />
+            ))}
+          </>
+        ) : (
+          <div className="empty-state">
+            <p>Nothing to show for this language yet.</p>
+          </div>
         )}
-        <TopTenRow movies={topTen} onMoreInfo={setModalMovie} />
-        {dedupedSections.map(({ key, title, subtitle, movies }) => (
-          <MovieRow key={key} title={title} subtitle={subtitle} movies={movies} onMoreInfo={setModalMovie} />
-        ))}
       </div>
       {modalMovie && <MovieModal movie={modalMovie} onClose={() => setModalMovie(null)} />}
     </>
