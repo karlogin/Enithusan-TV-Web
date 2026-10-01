@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { getMovie, refreshStream } from '../api';
+import { getMovie, proxyImageUrl, refreshStream } from '../api';
 import CastHint from '../components/CastHint';
 import MyListButton from '../components/MyListButton';
 import VideoPlayer from '../components/VideoPlayer';
@@ -118,7 +118,7 @@ export default function Watch() {
           <VideoPlayer
             mp4Url={movie.mp4Url}
             hlsUrl={movie.hlsUrl}
-            poster={movie.poster}
+            poster={proxyImageUrl(movie.poster)}
             title={movie.title}
             startTime={startTime}
             onProgress={(progress, duration) => {

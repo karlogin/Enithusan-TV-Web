@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { ContinueWatchingItem } from '../types';
 import { useUserLibrary } from '../context/UserLibraryContext';
+import { proxyImageUrl } from '../api';
 import './movies.css';
 
 interface ContinueWatchingRowProps {
@@ -26,7 +27,7 @@ export default function ContinueWatchingRow({ items }: ContinueWatchingRowProps)
           return (
             <div key={item.id} className="continue-card-wrap">
               <Link to={`/watch/${item.id}?lang=${item.lang}`} className="continue-card">
-                <img src={item.poster} alt={item.title} loading="lazy" />
+                <img src={proxyImageUrl(item.poster)} alt={item.title} loading="lazy" />
                 <div className="continue-progress">
                   <span style={{ width: `${pct}%` }} />
                 </div>

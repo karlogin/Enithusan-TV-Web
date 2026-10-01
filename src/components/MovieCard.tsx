@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import MyListButton from './MyListButton';
 import type { Movie } from '../types';
+import { proxyImageUrl } from '../api';
 import './movies.css';
 
 interface MovieCardProps {
@@ -14,7 +15,7 @@ export default function MovieCard({ movie, onMoreInfo }: MovieCardProps) {
       {movie.uhd && <span className="movie-card-uhd">4K</span>}
       <img
         className="movie-card-poster"
-        src={movie.poster}
+        src={proxyImageUrl(movie.poster)}
         alt={`${movie.title} poster`}
         loading="lazy"
         decoding="async"
