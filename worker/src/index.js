@@ -10,6 +10,7 @@ import {
   isPrivateIp,
   isAllowedStreamUrl,
   sanitizeStreamUrl,
+  toFetchUrl,
   decryptEJLinks,
   parseBrowseMovies,
   parseCarouselMovies,
@@ -307,7 +308,7 @@ async function proxyStream(request) {
   }
 
   const range = request.headers.get('Range');
-  const upstream = await fetch(streamUrl, {
+  const upstream = await fetch(toFetchUrl(streamUrl), {
     headers: {
       'User-Agent': USER_AGENT,
       Referer: `${BASE}/`,

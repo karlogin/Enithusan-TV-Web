@@ -45,6 +45,26 @@ export function sanitizeStreamUrl(url) {
   return decodeHtmlEntities(url).trim();
 }
 
+/**
+ * einthusan.io's CDN hosts are currently serving an expired TLS certificate
+ * (all three present the same expired cert), so HTTPS fetches to them fail.
+ * They still serve the same content over plain HTTP, so downgrade just the
+ * outbound fetch to this proxy's CDN origin -- the client-facing connection
+ * stays HTTPS throughout.
+ * @param {string} url
+ */
+export function toFetchUrl(url) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === 'https:' && CDN_HOSTS.includes(parsed.hostname)) {
+      parsed.protocol = 'http:';
+    }
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
 /** @param {string} encrypted */
 export function decryptEJLinks(encrypted) {
   try {

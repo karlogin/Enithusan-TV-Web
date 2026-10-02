@@ -5,6 +5,7 @@ import {
   isPrivateIp,
   isAllowedStreamUrl,
   sanitizeStreamUrl,
+  toFetchUrl,
   decryptEJLinks,
   parseBrowseMovies,
   parseCarouselMovies,
@@ -118,6 +119,33 @@ describe('sanitizeStreamUrl', () => {
     expect(sanitizeStreamUrl('  https://cdn1.einthusan.io/etv/foo  ')).toBe(
       'https://cdn1.einthusan.io/etv/foo',
     );
+  });
+});
+
+describe('toFetchUrl', () => {
+  it('downgrades CDN hosts from https to http', () => {
+    expect(toFetchUrl('https://cdn1.einthusan.io/etv/foo.jpg')).toBe(
+      'http://cdn1.einthusan.io/etv/foo.jpg',
+    );
+    expect(toFetchUrl('https://cdn2.einthusan.io/etv/content/a.mp4')).toBe(
+      'http://cdn2.einthusan.io/etv/content/a.mp4',
+    );
+  });
+
+  it('leaves non-CDN hosts on https', () => {
+    expect(toFetchUrl('https://einthusan.tv/etv/foo.jpg')).toBe(
+      'https://einthusan.tv/etv/foo.jpg',
+    );
+  });
+
+  it('leaves already-http URLs unchanged', () => {
+    expect(toFetchUrl('http://cdn1.einthusan.io/etv/foo.jpg')).toBe(
+      'http://cdn1.einthusan.io/etv/foo.jpg',
+    );
+  });
+
+  it('returns the original string for an unparsable URL', () => {
+    expect(toFetchUrl('not a url')).toBe('not a url');
   });
 });
 
