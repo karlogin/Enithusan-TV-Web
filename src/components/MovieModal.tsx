@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { getMovie, proxyImageUrl } from '../api';
+import { hidePosterOnError } from '../utils/image';
 import MyListButton from './MyListButton';
 import { useUserLibrary } from '../context/UserLibraryContext';
 import type { Movie, MovieDetails } from '../types';
@@ -89,7 +90,7 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
         <div className="modal-body">
           <div className="modal-top">
             {d.poster && (
-              <img className="modal-poster" src={proxyImageUrl(d.poster)} alt="" aria-hidden="true" />
+              <img className="modal-poster" src={proxyImageUrl(d.poster)} alt="" aria-hidden="true" onError={hidePosterOnError} />
             )}
             <div className="modal-top-text">
               <h2 id="modal-title" className="modal-title">{d.title}</h2>

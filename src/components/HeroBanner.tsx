@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import MyListButton from './MyListButton';
 import { proxyImageUrl } from '../api';
+import { hidePosterOnError } from '../utils/image';
 import type { Movie } from '../types';
 import { LANGUAGE_LABELS } from '../types';
 import './hero.css';
@@ -113,6 +114,7 @@ export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
           alt=""
           aria-hidden="true"
           style={{ transform: `translateY(calc(-50% + ${-contentShift}px))` }}
+          onError={hidePosterOnError}
         />
       )}
       {/* Mobile: poster card centered at top */}
@@ -123,6 +125,7 @@ export default function HeroBanner({ movies, onMoreInfo }: HeroBannerProps) {
           alt=""
           aria-hidden="true"
           key={`mobile-${movie.id}`}
+          onError={hidePosterOnError}
         />
       )}
       <div className="hero-content" key={movie.id} style={{ transform: `translateY(${contentShift}px)` }}>
