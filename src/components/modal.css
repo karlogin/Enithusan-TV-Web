@@ -3,10 +3,9 @@
   inset: 0;
   z-index: 200;
   display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 1rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .modal-backdrop {
@@ -27,6 +26,8 @@
 .modal-panel {
   position: relative;
   width: min(820px, 100%);
+  margin: auto;
+  flex-shrink: 0;
   background: #141414;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
@@ -64,6 +65,11 @@
 @media (max-width: 600px) {
   .modal-hero {
     height: 220px;
+  }
+
+  .modal-hero-play {
+    right: 1.25rem;
+    bottom: 1rem;
   }
 }
 
@@ -109,7 +115,7 @@
 .modal-hero-play {
   position: absolute;
   bottom: 1.5rem;
-  left: 1.75rem;
+  right: 1.75rem;
   z-index: 3;
   display: inline-flex;
   align-items: center;
