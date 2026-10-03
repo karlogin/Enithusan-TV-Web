@@ -293,8 +293,15 @@ async function getHomeData(lang, ctx) {
   return data;
 }
 
-/** @param {Request} request */
-async function proxyStream(request) {
+const IMAGE_CACHE_TTL_SECONDS = 24 * 60 * 60;
+
+/** @param {string} url */
+function isPosterImageUrl(url) {
+  return /\/moviecovers\//.test(url) || /\.(jpe?g|png|webp)(\?|$)/i.test(url);
+}
+
+/** @param {Request} request @param {ExecutionContext} ctx */
+async function proxyStream(request, ctx) {
   const url = new URL(request.url);
   const target = url.searchParams.get('url');
   if (!target) {
@@ -308,6 +315,19 @@ async function proxyStream(request) {
   }
 
   const range = request.headers.get('Range');
+  const isPoster = !range && isPosterImageUrl(streamUrl);
+
+  // Movie cover art is static and reused across every visitor's home/browse/search
+  // view, but proxying it through /api/stream previously sent no cache headers at
+  // all -- Lighthouse flagged this as ~550 KiB re-downloaded uncached on every
+  // single page load. Cache posters at the edge and tell the browser to keep them.
+  const cacheKey = isPoster ? new Request(url.toString()) : null;
+  const cache = isPoster ? caches.default : null;
+  if (cacheKey && cache) {
+    const cached = await cache.match(cacheKey);
+    if (cached) return cached;
+  }
+
   const upstream = await fetch(toFetchUrl(streamUrl), {
     headers: {
       'User-Agent': USER_AGENT,
@@ -326,6 +346,13 @@ async function proxyStream(request) {
     streamUrl.includes('.m3u8') ||
     contentType.includes('mpegurl') ||
     contentType.includes('m3u8');
+
+  if (isPoster && upstream.ok) {
+    headers.set('Cache-Control', `public, max-age=${IMAGE_CACHE_TTL_SECONDS}, immutable`);
+    const response = new Response(upstream.body, { status: upstream.status, headers });
+    ctx.waitUntil(cache.put(cacheKey, response.clone()));
+    return response;
+  }
 
   if (isManifest) {
     const text = await upstream.text();
@@ -442,7 +469,7 @@ export default {
 
       if (path === '/api/stream' || path === '/stream') {
         try {
-          return await proxyStream(request);
+          return await proxyStream(request, ctx);
         } catch (err) {
           const message =
             err instanceof Error && err.name === 'TimeoutError'
