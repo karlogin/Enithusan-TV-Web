@@ -5,6 +5,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import { ProfileProvider } from './context/ProfileContext';
 import { UserLibraryProvider } from './context/UserLibraryContext';
 import ErrorBoundary from './components/ErrorBoundary';
+import InstallPrompt from './components/InstallPrompt';
 import Navbar from './components/Navbar';
 import Splash from './components/Splash';
 import SpotlightSearch from './components/SpotlightSearch';
@@ -38,6 +39,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
       <main id="main-content">{children}</main>
       <TabBar />
       <SpotlightSearch />
+      <InstallPrompt />
     </div>
   );
 }
