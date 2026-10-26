@@ -82,6 +82,8 @@ export default function VideoPlayer({
   const [casting, setCasting] = useState(false);
   const [airPlayActive, setAirPlayActive] = useState(false);
   const [scrubTooltip, setScrubTooltip] = useState<{ time: number; x: number } | null>(null);
+  const [pipActive, setPipActive] = useState(false);
+  const [pipSupported, setPipSupported] = useState(false);
 
   useEffect(() => {
     setSrcMp4(mp4Url);
@@ -340,6 +342,40 @@ export default function VideoPlayer({
     };
   }, []);
 
+  // ── Picture-in-Picture support/state tracking ───────────────────────────────
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const videoPip = video as HTMLVideoElement & {
+      webkitSupportsPresentationMode?: (mode: string) => boolean;
+      webkitPresentationMode?: string;
+    };
+
+    const checkSupport = () => {
+      const standardSupported = typeof document !== 'undefined' && document.pictureInPictureEnabled && !video.disablePictureInPicture;
+      const iosSupported = typeof videoPip.webkitSupportsPresentationMode === 'function' && videoPip.webkitSupportsPresentationMode('picture-in-picture');
+      setPipSupported(!!(standardSupported || iosSupported));
+    };
+    checkSupport();
+
+    const onEnterPip = () => setPipActive(true);
+    const onLeavePip = () => setPipActive(false);
+    const onWebkitPresentationModeChanged = () => setPipActive(videoPip.webkitPresentationMode === 'picture-in-picture');
+
+    video.addEventListener('enterpictureinpicture', onEnterPip);
+    video.addEventListener('leavepictureinpicture', onLeavePip);
+    video.addEventListener('webkitpresentationmodechanged', onWebkitPresentationModeChanged);
+    video.addEventListener('loadedmetadata', checkSupport);
+
+    return () => {
+      video.removeEventListener('enterpictureinpicture', onEnterPip);
+      video.removeEventListener('leavepictureinpicture', onLeavePip);
+      video.removeEventListener('webkitpresentationmodechanged', onWebkitPresentationModeChanged);
+      video.removeEventListener('loadedmetadata', checkSupport);
+    };
+  }, [srcMp4, srcHls]);
+
   // ── Fullscreen change ────────────────────────────────────────────────────────
   useEffect(() => {
     const video = videoRef.current;
@@ -479,6 +515,36 @@ export default function VideoPlayer({
       container.requestFullscreen().catch(() => undefined);
     } else {
       document.exitFullscreen().catch(() => undefined);
+    }
+  }, []);
+
+  // ── Picture-in-Picture ───────────────────────────────────────────────────────
+  const togglePip = useCallback(async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const videoPip = video as HTMLVideoElement & {
+      webkitSupportsPresentationMode?: (mode: string) => boolean;
+      webkitSetPresentationMode?: (mode: 'picture-in-picture' | 'inline') => void;
+      webkitPresentationMode?: string;
+    };
+
+    try {
+      // iOS / older Safari: presentation-mode API (no standard PiP API available)
+      if (typeof videoPip.webkitSetPresentationMode === 'function' && typeof videoPip.webkitSupportsPresentationMode === 'function' && videoPip.webkitSupportsPresentationMode('picture-in-picture')) {
+        videoPip.webkitSetPresentationMode(videoPip.webkitPresentationMode === 'picture-in-picture' ? 'inline' : 'picture-in-picture');
+        return;
+      }
+      // Standard PiP API: Chrome, Firefox, Safari (macOS)
+      if (document.pictureInPictureEnabled && !video.disablePictureInPicture) {
+        if (document.pictureInPictureElement === video) {
+          await document.exitPictureInPicture();
+        } else {
+          await video.requestPictureInPicture();
+        }
+      }
+    } catch {
+      // PiP request rejected or unsupported — fail silently
     }
   }, []);
 
@@ -848,6 +914,22 @@ export default function VideoPlayer({
                   >
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M12 17l4-4H8l4 4zM21 3H3C1.9 3 1 3.9 1 5v12c0 1.1.9 2 2 2h4v-2H3V5h18v12h-4v2h4c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" />
+                    </svg>
+                  </button>
+                )}
+
+                {/* Picture-in-Picture */}
+                {pipSupported && (
+                  <button
+                    type="button"
+                    className={`vp-btn ${pipActive ? 'vp-btn-active' : ''}`}
+                    onClick={togglePip}
+                    aria-label={pipActive ? 'Exit picture in picture' : 'Picture in picture'}
+                    title="Picture in picture"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M19 7H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm0 12H5V9h14v10zM21 3H9v2h12v10h2V5c0-1.1-.9-2-2-2z" />
+                      <path d="M11 13h6v4h-6z" />
                     </svg>
                   </button>
                 )}
