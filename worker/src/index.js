@@ -24,7 +24,11 @@ const VALID_LANGS = new Set(['tamil', 'hindi', 'malayalam']);
 function makeCorsHeaders(env, request) {
   const allowed = env?.APP_URL || 'https://einthusan.mainframe.website';
   const origin = request?.headers?.get('Origin') ?? '';
-  const allowedOrigins = [allowed, 'https://karlogin.github.io'];
+  const extra = (env?.EXTRA_ORIGINS || '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+  const allowedOrigins = [allowed, ...extra, 'https://karlogin.github.io'];
   const resolvedOrigin = allowedOrigins.includes(origin) ? origin : allowed;
   return {
     'Access-Control-Allow-Origin': resolvedOrigin,

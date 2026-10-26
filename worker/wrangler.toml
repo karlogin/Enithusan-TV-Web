@@ -4,6 +4,7 @@ compatibility_date = "2024-09-23"
 
 [vars]
 APP_URL = "https://einthusan.mainframe.website"
+EXTRA_ORIGINS = "https://vadai.mainframe.website"
 
 [[kv_namespaces]]
 binding = "USER_DATA"
